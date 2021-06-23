@@ -1,4 +1,4 @@
-defmodule Membrane.Element.Template.BundlexProject do
+defmodule Membrane.FFmpeg.SWScale.BundlexProject do
   use Bundlex.Project
 
   def project do
@@ -9,8 +9,8 @@ defmodule Membrane.Element.Template.BundlexProject do
 
   defp natives(_platform) do
     [
-      native: [
-        sources: ["native.c"],
+      scaler: [
+        sources: ["scaler.c"],
         deps: [unifex: :unifex],
         interface: [:nif, :cnode],
         preprocessor: Unifex
