@@ -1,196 +1,169 @@
-#include <stdio.h>
-#include <libavutil/imgutils.h>
-#include <libavutil/parseutils.h>
-#include <libswscale/swscale.h>
+#include "scaler.h"
 
-void calculatate_scaling_resolution(int src_w, int src_h, int dst_w, int dst_h, int *scaled_w, int *scaled_h) {
-  if ((float) (dst_h * src_w / src_h) <= dst_w) {
+void calculatate_scaling_resolution(int source_width, int source_height, int desired_width, int desired_height, int *scaled_width, int *scaled_height) {
+  if ((float) (desired_height * source_width / source_height) <= desired_width) {
     // paddings on left and right
-    *scaled_w = dst_h * src_w / src_h;
-    *scaled_h = dst_h;
+    *scaled_width = desired_height * source_width / source_height;
+    *scaled_height = desired_height;
 
     // both paddings need even width
-    *scaled_w = *scaled_w / 2 * 2;
-    if ((dst_w - *scaled_w) % 4 != 0)
-      *scaled_w -= 2;
+    *scaled_width = *scaled_width / 2 * 2;
+    if ((desired_width - *scaled_width) % 4 != 0)
+      *scaled_width -= 2;
 
     // only even size
-    *scaled_h = *scaled_h / 2 * 2;
+    *scaled_height = *scaled_height / 2 * 2;
   } else {
     // paddings above and below
-    *scaled_w = dst_w;
-    *scaled_h = dst_w * src_h / src_w;
+    *scaled_width = desired_width;
+    *scaled_height = desired_width * source_height / source_width;
 
     // only even size
-    *scaled_w = *scaled_w / 2 * 2;
+    *scaled_width = *scaled_width / 2 * 2;
 
     // both paddings need even height
-    *scaled_h = *scaled_h / 2 * 2;
-    if ((dst_h - *scaled_h) % 4 != 0)
-      *scaled_h -= 2;
-  }
-}
- 
-int read_from_file(uint8_t *data[4], int height, int linesize[4], FILE *file) {
-  fread(data[0], 1, height * linesize[0], file);
-  fread(data[1], 1, height / 2 * linesize[1], file);
-  fread(data[2], 1, height / 2 * linesize[2], file);
-
-  if (feof(file)) return -1;
-  return 0;
-}
-
-void add_paddings(uint8_t *scaled_data[4], int scaled_w, int scaled_h, 
-                  uint8_t *dst_data[4], int dst_w, int dst_h) {
-
-  if (scaled_h == dst_h) {
-    // paddings on left and right
-    int start = (dst_w - scaled_w) / 2;
-    int end = start + scaled_w;
-
-    for (int h=0; h < dst_h; h++) {
-      for (int w=0; w < dst_w; w++) {
-        if (w < start || w >= end)
-          dst_data[0][h * dst_w + w] = 0;
-        else
-          dst_data[0][h * dst_w + w] = scaled_data[0][h * scaled_w + w - start];
-      }
-    }
-
-    for (int h=0; h < dst_h / 2; h++) {
-      for (int w=0; w < dst_w / 2; w++) {
-        if (w < start / 2 || w >= end / 2) {
-          dst_data[1][h * dst_w / 2 + w] = 128;
-          dst_data[2][h * dst_w / 2 + w] = 128;
-        }
-        else {
-          dst_data[1][h * dst_w / 2 + w] = scaled_data[1][h * scaled_w / 2 + w - start / 2];
-          dst_data[2][h * dst_w / 2 + w] = scaled_data[2][h * scaled_w / 2 + w - start / 2];
-        }
-      }
-    }
-  } else {
-    // paddings above and below
-    int start = (dst_h - scaled_h) / 2;
-    int end = start + scaled_h;
-
-    for (int h=0; h < dst_h; h++) {
-      if (h < start || h >= end) {
-        for (int w=0; w < dst_w; w++)
-          dst_data[0][h * dst_w + w] = 0;
-      } else {
-        for (int w=0; w < dst_w; w++)
-          dst_data[0][h * dst_w + w] = scaled_data[0][(h - start) * scaled_w + w];
-      }
-    }
-
-    for (int h=0; h < dst_h / 2; h++) {
-      if (h < start / 2 || h >= end / 2) {
-        for (int w=0; w < dst_w; w++) {
-          dst_data[1][h * dst_w / 2 + w] = 128;
-          dst_data[2][h * dst_w / 2 + w] = 128;
-        }
-      } else {
-        for (int w=0; w < dst_w; w++) {
-          dst_data[1][h * dst_w / 2 + w] = scaled_data[1][(h - start / 2) * scaled_w / 2 + w];
-          dst_data[2][h * dst_w / 2 + w] = scaled_data[2][(h - start / 2) * scaled_w / 2 + w];
-        }
-      }
-    }
+    *scaled_height = *scaled_height / 2 * 2;
+    if ((desired_height - *scaled_height) % 4 != 0)
+      *scaled_height -= 2;
   }
 }
 
-void save_to_file(uint8_t *data[4], int height, int linesize[4], FILE *file) {
-  fwrite(data[0], 1, height * linesize[0], file);
-  fwrite(data[1], 1, height / 2 * linesize[1], file);
-  fwrite(data[2], 1, height / 2 * linesize[2], file);
-}
+UNIFEX_TERM create(UnifexEnv *env, int source_width, int source_height, int desired_width, int desired_height) {
+  State *state = unifex_alloc_state(env);
 
-int main(int argc, char **argv) {
-  uint8_t *src_data[4], *scaled_data[4], *dst_data[4];
-  int src_linesize[4], scaled_linesize[4], dst_linesize[4];
-  enum AVPixelFormat pix_fmt = AV_PIX_FMT_YUV420P;
-  struct SwsContext *sws_ctx;
-  int i, ret;
+  enum AVPixelFormat pixel_format = AV_PIX_FMT_YUV420P;
+  int ret;
 
-  int src_w = 360;
-  int src_h = 640;
-  
-  int dst_w = 200;
-  int dst_h = 750;
+  int scaled_width;
+  int scaled_height;
 
-  int scaled_w;
-  int scaled_h;
+  calculatate_scaling_resolution(source_width, source_height, desired_width, desired_height, &scaled_width, &scaled_height);
 
-  calculatate_scaling_resolution(src_w, src_h, dst_w, dst_h, &scaled_w, &scaled_h);
+  printf("scaled resolution: %dx%d\n", scaled_width, scaled_height);
 
-  printf("scaled resolution: %dx%d\n", scaled_w, scaled_h);
+  state->source_width = source_width;
+  state->source_height = source_height;
 
-  const char *src_filename = "1.yuv";
-  const char *dst_filename = "2.yuv";
+  state->desired_width = desired_width;
+  state->desired_height = desired_height;
 
-  sws_ctx = sws_getContext(src_w, src_h, pix_fmt,
-                            scaled_w, scaled_h, pix_fmt,
+  state->scaled_width = scaled_width;
+  state->scaled_height = scaled_height;
+
+  state->sws_context = sws_getContext(source_width, source_height, pixel_format,
+                            scaled_width, scaled_height, pixel_format,
                             SWS_BILINEAR, NULL, NULL, NULL);
-  if (!sws_ctx) {
+
+  if (!state->sws_context) {
     fprintf(stderr,
             "Impossible to create scale context for the conversion "
             "fmt:%s s:%dx%d -> fmt:%s s:%dx%d\n",
-            av_get_pix_fmt_name(pix_fmt), src_w, src_h,
-            av_get_pix_fmt_name(pix_fmt), scaled_w, scaled_h);
+            av_get_pix_fmt_name(pixel_format), source_width, source_height,
+            av_get_pix_fmt_name(pixel_format), scaled_width, scaled_height);
     ret = AVERROR(EINVAL);
-    goto end;
+    return create_result_error(env, "create");
   }
 
-  if ((ret = av_image_alloc(src_data, src_linesize,
-                            src_w, src_h, pix_fmt, 1)) < 0) {
+  if ((ret = av_image_alloc(state->source_data, state->source_linesize,
+                            source_width, source_height, pixel_format, 1)) < 0) {
     fprintf(stderr, "Could not allocate source image\n");
-    goto end;
+    return create_result_error(env, "alloc source data");
   }
 
-  if ((ret = av_image_alloc(scaled_data, scaled_linesize,
-                            scaled_w, scaled_h, pix_fmt, 1)) < 0) {
+  if ((ret = av_image_alloc(state->scaled_data, state->scaled_linesize,
+                            scaled_width, scaled_height, pixel_format, 1)) < 0) {
     fprintf(stderr, "Could not allocate scaled image\n");
-    goto end;
+    return create_result_error(env, "alloc scaled data");
   }
 
-  if ((ret = av_image_alloc(dst_data, dst_linesize,
-                            dst_w, dst_h, pix_fmt, 1)) < 0) {
+  if ((ret = av_image_alloc(state->desired_data, state->desired_linesize,
+                            desired_width, desired_height, pixel_format, 1)) < 0) {
     fprintf(stderr, "Could not allocate destination image\n");
-    goto end;
+    return create_result_error(env, "alloc desired data");
   }
 
-  FILE *src_file = fopen(src_filename, "rb");
-  if (!src_file) {
-    fprintf(stderr, "Could not open source file %s\n", src_filename);
-    exit(1);
+  return create_result_ok(env, state);
+}
+
+void add_paddings(uint8_t *scaled_data[4], int scaled_width, int scaled_height, 
+                  uint8_t *dst_data[4], int desired_width, int desired_height) {
+
+  if (scaled_height == desired_height) {
+    // paddings on left and right
+    int start = (desired_width - scaled_width) / 2;
+    int end = start + scaled_width;
+
+    for (int h=0; h < desired_height; h++) {
+      for (int w=0; w < desired_width; w++) {
+        if (w < start || w >= end)
+          dst_data[0][h * desired_width + w] = 0;
+        else
+          dst_data[0][h * desired_width + w] = scaled_data[0][h * scaled_width + w - start];
+      }
+    }
+
+    for (int h=0; h < desired_height / 2; h++) {
+      for (int w=0; w < desired_width / 2; w++) {
+        if (w < start / 2 || w >= end / 2) {
+          dst_data[1][h * desired_width / 2 + w] = 128;
+          dst_data[2][h * desired_width / 2 + w] = 128;
+        }
+        else {
+          dst_data[1][h * desired_width / 2 + w] = scaled_data[1][h * scaled_width / 2 + w - start / 2];
+          dst_data[2][h * desired_width / 2 + w] = scaled_data[2][h * scaled_width / 2 + w - start / 2];
+        }
+      }
+    }
+  } else {
+    // paddings above and below
+    int start = (desired_height - scaled_height) / 2;
+    int end = start + scaled_height;
+
+    for (int h=0; h < desired_height; h++) {
+      if (h < start || h >= end) {
+        for (int w=0; w < desired_width; w++)
+          dst_data[0][h * desired_width + w] = 0;
+      } else {
+        for (int w=0; w < desired_width; w++)
+          dst_data[0][h * desired_width + w] = scaled_data[0][(h - start) * scaled_width + w];
+      }
+    }
+
+    for (int h=0; h < desired_height / 2; h++) {
+      if (h < start / 2 || h >= end / 2) {
+        for (int w=0; w < desired_width; w++) {
+          dst_data[1][h * desired_width / 2 + w] = 128;
+          dst_data[2][h * desired_width / 2 + w] = 128;
+        }
+      } else {
+        for (int w=0; w < desired_width; w++) {
+          dst_data[1][h * desired_width / 2 + w] = scaled_data[1][(h - start / 2) * scaled_width / 2 + w];
+          dst_data[2][h * desired_width / 2 + w] = scaled_data[2][(h - start / 2) * scaled_width / 2 + w];
+        }
+      }
+    }
   }
+}
 
-  FILE *dst_file = fopen(dst_filename, "wb");
-  if (!dst_file) {
-    fprintf(stderr, "Could not open destination file %s\n", dst_filename);
-    exit(1);
-  }
+UNIFEX_TERM scale(UnifexEnv *env, UnifexPayload *payload, State *state) {
+  enum AVPixelFormat pixel_format = AV_PIX_FMT_YUV420P;
 
-  int continue_reading = 0;
-  while(1) {
-    continue_reading = read_from_file(src_data, src_h, src_linesize, src_file);
-    if (continue_reading < 0) break;
+  av_image_fill_arrays(state->source_data, state->source_linesize, payload->data,
+                       pixel_format, state->source_width, state->source_height, 1);
 
-    sws_scale(sws_ctx, (const uint8_t * const*)src_data,
-              src_linesize, 0, src_h, scaled_data, scaled_linesize);
+  sws_scale(state->sws_context, (const uint8_t * const*)state->source_data,
+              state->source_linesize, 0, state->source_height, state->scaled_data, state->scaled_linesize);
     
-    add_paddings(scaled_data, scaled_w, scaled_h, dst_data, dst_w, dst_h);
+  add_paddings(state->scaled_data, state->scaled_width, state->scaled_height, state->desired_data, state->desired_width, state->desired_height);
 
-    // save_to_file(scaled_data, scaled_h, scaled_linesize, dst_file);
-    save_to_file(dst_data, dst_h, dst_linesize, dst_file);
-  }
- 
-end:
-  fclose(src_file);
-  fclose(dst_file);
-  av_freep(&src_data[0]);
-  av_freep(&dst_data[0]);
-  sws_freeContext(sws_ctx);
-  return ret < 0;
+  size_t payload_size = av_image_get_buffer_size(pixel_format, state->desired_width, state->desired_height, 1);
+  UnifexPayload *frame = unifex_payload_alloc(env, UNIFEX_PAYLOAD_SHM, payload_size);
+  
+  av_image_copy_to_buffer(
+        frame->data, payload_size,
+        (const uint8_t *const *)state->desired_data, (const int *)state->desired_linesize,
+        pixel_format, state->desired_width, state->desired_height, 1
+  );
+
+  return scale_result_ok(env, frame);
 }

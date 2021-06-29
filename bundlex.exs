@@ -3,16 +3,16 @@ defmodule Membrane.FFmpeg.SWScale.BundlexProject do
 
   def project do
     [
-      natives: natives(Bundlex.platform())
+      natives: natives()
     ]
   end
 
-  defp natives(_platform) do
+  defp natives() do
     [
       scaler: [
+        interface: :nif,
         sources: ["scaler.c"],
-        deps: [unifex: :unifex],
-        interface: [:nif, :cnode],
+        pkg_configs: ["libswscale", "libavutil"],
         preprocessor: Unifex
       ]
     ]

@@ -24,8 +24,7 @@ defmodule Membrane.FFmpeg.SWScale.Mixfile do
 
   def application do
     [
-      extra_applications: [],
-      mod: {Membrane.FFmpeg.SWScale, []}
+      extra_applications: []
     ]
   end
 
@@ -34,8 +33,11 @@ defmodule Membrane.FFmpeg.SWScale.Mixfile do
 
   defp deps do
     [
-      {:membrane_core, "~> 0.6.0"},
+      {:membrane_core, "~> 0.7.0"},
+      {:membrane_caps_video_raw, "~> 0.1.0"},
       {:unifex, "~> 0.4.0"},
+      {:membrane_file_plugin, "~> 0.6.0", only: [:dev, :test]},
+      {:membrane_h264_ffmpeg_plugin, "~> 0.9.0", only: [:dev, :test]},
       {:ex_doc, "~> 0.22", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0.0", only: :dev, runtime: false},
       {:credo, "~> 1.4", only: :dev, runtime: false}
