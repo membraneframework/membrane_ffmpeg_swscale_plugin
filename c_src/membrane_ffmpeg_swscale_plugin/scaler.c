@@ -1,5 +1,17 @@
 #include "scaler.h"
 
+void handle_destroy_state(UnifexEnv *env, State *state) {
+  UNIFEX_UNUSED(env);
+
+  if (state->sws_context != NULL) {
+    sws_freeContext(state->sws_context);
+  }
+
+  av_freep(&state->source_data[0]);
+  av_freep(&state->scaled_data[0]);
+  av_freep(&state->desired_data[0]);
+}
+
 void calculatate_scaling_resolution(int source_width, int source_height, int desired_width, int desired_height, int *scaled_width, int *scaled_height) {
   if ((float) (desired_height * source_width / source_height) <= desired_width) {
     // paddings on left and right
