@@ -13,7 +13,8 @@ defmodule Membrane.FFmpeg.SWScale.Mixfile do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      description: "Plugin performing video scaling, using SWScale module of [FFmpeg](https://www.ffmpeg.org/) library.",
+      description:
+        "Plugin performing video scaling, using SWScale module of [FFmpeg](https://www.ffmpeg.org/) library.",
       package: package(),
       name: "Membrane FFmpeg SWScale plugin",
       source_url: @github_url,

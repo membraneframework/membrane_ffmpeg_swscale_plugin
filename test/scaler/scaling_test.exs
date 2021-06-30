@@ -4,15 +4,10 @@ defmodule ScalerTest do
   alias Membrane.H264
   alias Membrane.Testing.Pipeline
 
-  def prepare_paths() do
-    # in_path = "../fixtures/input-360x640.h264" |> Path.expand(__DIR__)
-    in_path = "../fixtures/input-10-720p.h264" |> Path.expand(__DIR__)
-    # reference_path = "../fixtures/reference-#{filename}.raw" |> Path.expand(__DIR__)
-    # out_path = "/tmp/output-scaling-200x750.h264"
-    out_path = "../fixtures/output-scaling-200x750.h264" |> Path.expand(__DIR__)
+  def prepare_paths(filename) do
+    in_path = "../fixtures/input-#{filename}.h264" |> Path.expand(__DIR__)
+    out_path = "../fixtures/output-scaling-#{filename}.h264" |> Path.expand(__DIR__)
     File.rm(out_path)
-    # on_exit(fn -> File.rm(out_path) end)
-    # {in_path, reference_path, out_path}
     {in_path, out_path}
   end
 
@@ -22,33 +17,28 @@ defmodule ScalerTest do
         file_src: %Membrane.File.Source{location: in_path},
         parser: H264.FFmpeg.Parser,
         decoder: H264.FFmpeg.Decoder,
-        scaler: %Membrane.FFmpeg.SWScale.Scaler{desired_width: 200, desired_height: 750},
+        scaler: %Membrane.FFmpeg.SWScale.Scaler{target_width: 400, target_height: 800},
         encoder: H264.FFmpeg.Encoder,
         sink: %Membrane.File.Sink{location: out_path}
       ]
     })
   end
 
-  def assert_files_equal(file_a, file_b) do
-    assert {:ok, a} = File.read(file_a)
-    assert {:ok, b} = File.read(file_b)
-    assert a == b
-  end
-
-  def perform_test() do
-    # {in_path, ref_path, out_path} = prepare_paths(filename)
-    {in_path, out_path} = prepare_paths()
+  def perform_test(filename) do
+    {in_path, out_path} = prepare_paths(filename)
 
     assert {:ok, pid} = make_pipeline(in_path, out_path)
     assert Pipeline.play(pid) == :ok
-    assert_end_of_stream(pid, :sink, :input, 2000)
-    # assert_files_equal(out_path, ref_path)
+    assert_end_of_stream(pid, :sink, :input, 25_000)
   end
 
   describe "ScalingPipeline should" do
-    test "scale 10 720p frames to 200x750" do
-      perform_test()
+    test "scale 10 720p frames to 640x640" do
+      perform_test("10-1280x720")
     end
-  end
 
+    # test "scale 3565 360x640 frames to 640x640" do
+    #   perform_test("3565-360x640")
+    # end
+  end
 end
