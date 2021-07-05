@@ -21,11 +21,31 @@ For usage on Windows, see `Using on Windows` section below.
 
 ## Sample usage
 
-TODO
+```elixir
+defmodule Scaling.Pipeline do
+  use Membrane.Pipeline
 
-## Using on Windows
+  @doc false
+  @impl true
+  def handle_init(_) do
+    children = [
+      file_src: %Membrane.File.Source{location: "/tmp/input.raw"},
+      parser: %Membrane.Element.RawVideo.Parser{format: :I420, width: 1280, height: 720},
+      scaler: %Membrane.FFmpeg.SWScale.Scaler{output_width: 640, output_height: 640},
+      file_sink: %Membrane.File.Sink{location: "/tmp/output.raw"}
+    ]
 
-TODO
+    links = [
+      link(:file_src)
+      |> to(:parser)
+      |> to(:scaler)
+      |> to(:file_sink)
+    ]
+
+    {{:ok, spec: %ParentSpec{children: children, links: links}}, %{}}
+  end
+end
+```
 
 ## Copyright and License
 
