@@ -4,7 +4,7 @@ defmodule Scaler.NativeTest do
   alias Membrane.FFmpeg.SWScale.Scaler.Native, as: Scaler
 
   test "Scale 1 720p frame" do
-    in_path = "../fixtures/raw-10-1280x720.raw" |> Path.expand(__DIR__)
+    in_path = "../fixtures/input-10-1280x720.raw" |> Path.expand(__DIR__)
 
     assert {:ok, file} = File.read(in_path)
     assert {:ok, native_state} = Scaler.create(1280, 720, 640, 640)

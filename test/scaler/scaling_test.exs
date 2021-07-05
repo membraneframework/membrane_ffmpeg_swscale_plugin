@@ -4,41 +4,58 @@ defmodule ScalerTest do
   alias Membrane.H264
   alias Membrane.Testing.Pipeline
 
-  def prepare_paths(filename) do
-    in_path = "../fixtures/input-#{filename}.h264" |> Path.expand(__DIR__)
-    out_path = "../fixtures/output-scaling-#{filename}.h264" |> Path.expand(__DIR__)
+  describe "ScalingPipeline should" do
+    test "scale 10 raw frames to 400x800" do
+      {in_path, out_path} = prepare_paths("10-1280x720", "raw")
+      assert {:ok, pid} = make_pipeline_raw(in_path, out_path)
+
+      perform_test(out_path, pid)
+    end
+
+    test "scale 10 h264 frames to 400x800" do
+      {in_path, out_path} = prepare_paths("10-1280x720", "h264")
+      assert {:ok, pid} = make_pipeline_h264(in_path, out_path)
+
+      perform_test(out_path, pid)
+    end
+  end
+
+  defp perform_test(out_path, pid) do
+    assert Pipeline.play(pid) == :ok
+    assert_end_of_stream(pid, :sink, :input, 25_000)
+    Pipeline.stop_and_terminate(pid, blocking?: true)
+
+    assert {:ok, file} = File.read(out_path)
+    assert byte_size(file) == 4_800_000
+  end
+
+  defp prepare_paths(filename, format) do
+    in_path = "../fixtures/input-#{filename}.#{format}" |> Path.expand(__DIR__)
+    out_path = "../fixtures/output-scaling-#{filename}.raw" |> Path.expand(__DIR__)
     File.rm(out_path)
     {in_path, out_path}
   end
 
-  def make_pipeline(in_path, out_path) do
+  defp make_pipeline_raw(in_path, out_path) do
     Pipeline.start_link(%Pipeline.Options{
       elements: [
         file_src: %Membrane.File.Source{location: in_path},
-        parser: H264.FFmpeg.Parser,
-        decoder: H264.FFmpeg.Decoder,
-        scaler: %Membrane.FFmpeg.SWScale.Scaler{target_width: 400, target_height: 800},
-        encoder: H264.FFmpeg.Encoder,
+        parser: %Membrane.Element.RawVideo.Parser{format: :I420, width: 1280, height: 720},
+        scaler: %Membrane.FFmpeg.SWScale.Scaler{output_width: 400, output_height: 800},
         sink: %Membrane.File.Sink{location: out_path}
       ]
     })
   end
 
-  def perform_test(filename) do
-    {in_path, out_path} = prepare_paths(filename)
-
-    assert {:ok, pid} = make_pipeline(in_path, out_path)
-    assert Pipeline.play(pid) == :ok
-    assert_end_of_stream(pid, :sink, :input, 25_000)
-  end
-
-  describe "ScalingPipeline should" do
-    test "scale 10 720p frames to 640x640" do
-      perform_test("10-1280x720")
-    end
-
-    # test "scale 3565 360x640 frames to 640x640" do
-    #   perform_test("3565-360x640")
-    # end
+  defp make_pipeline_h264(in_path, out_path) do
+    Pipeline.start_link(%Pipeline.Options{
+      elements: [
+        file_src: %Membrane.File.Source{location: in_path},
+        parser: H264.FFmpeg.Parser,
+        decoder: H264.FFmpeg.Decoder,
+        scaler: %Membrane.FFmpeg.SWScale.Scaler{output_width: 400, output_height: 800},
+        sink: %Membrane.File.Sink{location: out_path}
+      ]
+    })
   end
 end

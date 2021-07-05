@@ -6,19 +6,19 @@
 #include <stdio.h>
 
 typedef struct ScalerState {
-  int source_width;
-  int source_height;
+  int input_width;
+  int input_height;
 
-  int target_width;
-  int target_height;
+  int output_width;
+  int output_height;
 
   int scaled_width;
   int scaled_height;
 
   struct SwsContext *sws_context;
 
-  uint8_t *source_data[4], *scaled_data[4], *target_data[4];
-  int source_linesize[4], scaled_linesize[4], target_linesize[4];
+  uint8_t *input_data[4], *scaled_data[4], *output_data[4];
+  int input_linesize[4], scaled_linesize[4], output_linesize[4];
 } State;
 
 #include "_generated/scaler.h"
