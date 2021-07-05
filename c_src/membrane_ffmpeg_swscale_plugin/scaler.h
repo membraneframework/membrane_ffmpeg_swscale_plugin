@@ -17,8 +17,8 @@ typedef struct ScalerState {
 
   struct SwsContext *sws_context;
 
-  uint8_t *input_data[4], *scaled_data[4], *output_data[4];
-  int input_linesize[4], scaled_linesize[4], output_linesize[4];
+  uint8_t *scaled_data[4], *output_data[4];
+  int scaled_linesize[4], output_linesize[4];
 } State;
 
 #include "_generated/scaler.h"
