@@ -4,7 +4,7 @@
 [![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat)](https://hexdocs.pm/membrane_ffmpeg_swscale_plugin/)
 [![CircleCI](https://circleci.com/gh/membraneframework/membrane_ffmpeg_swscale_plugin.svg?style=svg)](https://circleci.com/gh/membraneframework/membrane_ffmpeg_swscale_plugin)
 
-Plugin performing video scaling, using SWScale module of [FFmpeg](https://www.ffmpeg.org/) library.
+Plugin providing an element scaling raw video frames, using SWScale module of [FFmpeg](https://www.ffmpeg.org/) library.
 
 It is a part of [Membrane Multimedia Framework](https://membraneframework.org).
 
@@ -16,29 +16,56 @@ Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 {:membrane_ffmpeg_swscale_plugin, "~> 0.1.0"}
 ```
 
-You also need to have [FFmpeg](https://www.ffmpeg.org/) library installed.
-For usage on Windows, see `Using on Windows` section below.
+You also need to have [FFmpeg](https://www.ffmpeg.org/) library with development headers installed on your system.
+
+## Description
+
+Scaler needs input in the YUV420p format, processes one frame at a time and requires getting caps with input video
+width and height. To meet all requirements either `Membrane.Element.RawVideo.Parser` or some decoder
+(e.g. `Membrane.H264.FFmpeg.Decoder`) have to precede Scaler in the pipeline.
+
+There are two options that have to be specified when creating the element:
+- `output_width` - desired scaled video width.
+- `output_height` - desired scaled video height.
+
+Both need to be even numbers.
+
+Scaling consists of two operations:
+- scaling itself - resizing video frame with keeping original ratio. After that operation at least one of the
+dimensions of the input frame match the respective dimension of the desired output size. The second one
+(if does not match) is smaller than its respective dimension.
+- adding paddings - if one dimension does not match after scaling, paddings have to be added. They are put on both
+sides of the scaled frame equally. They are either above and below the frame or on the left and right sides of it.
+It depends on the dimension that did not match after scaling.
+
+The output of the element is also in the YUV420p format. It has the size as specified in the options. All
+caps except for width and height are passed unchanged to the next element in the pipeline.
 
 ## Sample usage
+
+Scaling encoded (using H.264 standard) video requires parser and decoder because Scaler scales only raw video.
 
 ```elixir
 defmodule Scaling.Pipeline do
   use Membrane.Pipeline
 
-  @doc false
   @impl true
   def handle_init(_) do
     children = [
-      file_src: %Membrane.File.Source{location: "/tmp/input.raw"},
-      parser: %Membrane.Element.RawVideo.Parser{format: :I420, width: 1280, height: 720},
+      file_src: %Membrane.File.Source{location: "/tmp/input.h264"},
+      parser: Membrane.H264.FFmpeg.Parser,
+      decoder: Membrane.H264.FFmpeg.Decoder,
       scaler: %Membrane.FFmpeg.SWScale.Scaler{output_width: 640, output_height: 640},
-      file_sink: %Membrane.File.Sink{location: "/tmp/output.raw"}
+      encoder: Membrane.H264.FFmpeg.Encoder,
+      file_sink: %Membrane.File.Sink{location: "/tmp/output.h264"}
     ]
 
     links = [
       link(:file_src)
       |> to(:parser)
+      |> to(:decoder)
       |> to(:scaler)
+      |> to(:encoder)
       |> to(:file_sink)
     ]
 

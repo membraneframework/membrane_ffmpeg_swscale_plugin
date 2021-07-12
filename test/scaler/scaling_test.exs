@@ -4,15 +4,6 @@ defmodule ScalerTest do
   alias Membrane.H264
   alias Membrane.Testing.Pipeline
 
-  defp perform_test(output_path, pid) do
-    assert Pipeline.play(pid) == :ok
-    assert_end_of_stream(pid, :sink, :input, 25_000)
-    Pipeline.stop_and_terminate(pid, blocking?: true)
-
-    assert {:ok, file} = File.read(output_path)
-    assert byte_size(file) == 4_800_000
-  end
-
   defp prepare_paths(file_name, format) do
     input_path = "../fixtures/input-#{file_name}.#{format}" |> Path.expand(__DIR__)
     output_path = "../fixtures/output-scaling-#{file_name}.raw" |> Path.expand(__DIR__)
@@ -21,6 +12,15 @@ defmodule ScalerTest do
     on_exit(fn -> File.rm(output_path) end)
 
     {input_path, output_path}
+  end
+
+  defp perform_test(output_path, pid) do
+    assert Pipeline.play(pid) == :ok
+    assert_end_of_stream(pid, :sink, :input, 25_000)
+    Pipeline.stop_and_terminate(pid, blocking?: true)
+
+    assert {:ok, file} = File.read(output_path)
+    assert byte_size(file) == 4_800_000
   end
 
   describe "ScalingPipeline should" do
