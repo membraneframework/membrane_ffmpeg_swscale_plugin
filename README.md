@@ -13,7 +13,7 @@ It is a part of [Membrane Multimedia Framework](https://membraneframework.org).
 Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 ```elixir
-{:membrane_ffmpeg_swscale_plugin, "~> 0.1.0"}
+{:membrane_ffmpeg_swscale_plugin, "~> 0.3.0"}
 ```
 
 You also need to have [FFmpeg](https://www.ffmpeg.org/) library with development headers installed on your system.
@@ -25,12 +25,14 @@ width and height. To meet all requirements either `Membrane.Element.RawVideo.Par
 (e.g. `Membrane.H264.FFmpeg.Decoder`) have to precede Scaler in the pipeline.
 
 There are two options that have to be specified when creating the element:
+
 - `output_width` - desired scaled video width.
 - `output_height` - desired scaled video height.
 
 Both need to be even numbers.
 
 Scaling consists of two operations:
+
 - scaling itself - resizing video frame with keeping original ratio. After that operation at least one of the
 dimensions of the input frame match the respective dimension of the desired output size. The second one
 (if does not match) is smaller than its respective dimension.
