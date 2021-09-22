@@ -205,9 +205,11 @@ UNIFEX_TERM scale(UnifexEnv *env, UnifexPayload *payload, State *state) {
           frame.data, payload_size, (const uint8_t *const *)state->output_data,
           (const int *)state->output_linesize, pixel_format,
           state->output_width, state->output_height, 1) < 0) {
-    return scale_result_error(env, "copy_to_payload");
+    res = scale_result_error(env, "copy_to_payload");
+    goto cleanup;
   }
   res = scale_result_ok(env, &frame);
+cleanup:
   unifex_payload_release(&frame);
   return res;
 }
