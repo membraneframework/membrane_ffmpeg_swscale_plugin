@@ -175,6 +175,8 @@ void add_paddings(uint8_t *scaled_data[4], int scaled_width, int scaled_height,
 }
 
 UNIFEX_TERM scale(UnifexEnv *env, UnifexPayload *payload, State *state) {
+  UNIFEX_TERM res;
+
   enum AVPixelFormat pixel_format = AV_PIX_FMT_YUV420P;
 
   uint8_t *input_data[4];
@@ -196,15 +198,18 @@ UNIFEX_TERM scale(UnifexEnv *env, UnifexPayload *payload, State *state) {
   size_t payload_size = av_image_get_buffer_size(
       pixel_format, state->output_width, state->output_height, 1);
 
-  UnifexPayload *frame =
-      unifex_payload_alloc(env, UNIFEX_PAYLOAD_SHM, payload_size);
+  UnifexPayload frame;
+  unifex_payload_alloc(env, UNIFEX_PAYLOAD_SHM, payload_size, &frame);
 
   if (av_image_copy_to_buffer(
-          frame->data, payload_size, (const uint8_t *const *)state->output_data,
+          frame.data, payload_size, (const uint8_t *const *)state->output_data,
           (const int *)state->output_linesize, pixel_format,
           state->output_width, state->output_height, 1) < 0) {
-    return scale_result_error(env, "copy_to_payload");
+    res = scale_result_error(env, "copy_to_payload");
+    goto cleanup;
   }
-
-  return scale_result_ok(env, frame);
+  res = scale_result_ok(env, &frame);
+cleanup:
+  unifex_payload_release(&frame);
+  return res;
 }
