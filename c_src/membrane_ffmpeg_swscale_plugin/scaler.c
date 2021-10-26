@@ -199,7 +199,7 @@ UNIFEX_TERM scale(UnifexEnv *env, UnifexPayload *payload, State *state) {
       pixel_format, state->output_width, state->output_height, 1);
 
   UnifexPayload frame;
-  unifex_payload_alloc(env, UNIFEX_PAYLOAD_SHM, payload_size, &frame);
+  unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, payload_size, &frame);
 
   if (av_image_copy_to_buffer(
           frame.data, payload_size, (const uint8_t *const *)state->output_data,
