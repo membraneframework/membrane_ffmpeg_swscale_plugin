@@ -198,7 +198,7 @@ UNIFEX_TERM scale(UnifexEnv *env, UnifexPayload *payload, int shared_payload, St
   size_t payload_size = av_image_get_buffer_size(
       pixel_format, state->output_width, state->output_height, 1);
 
-  UnifexPayload payload_frame;
+  UnifexPayload frame;
   UnifexPayloadType payload_type;
   if (shared_payload) {
     payload_type = UNIFEX_PAYLOAD_SHM;
