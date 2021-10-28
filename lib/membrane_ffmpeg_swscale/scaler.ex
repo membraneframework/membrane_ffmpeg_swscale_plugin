@@ -32,9 +32,10 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
                 type: :int,
                 description: "Height of the scaled video."
               ],
-              shared_payload: [
+              use_shm?: [
                 type: :boolean,
-                desciption: "If true, native scaler will use shared memory for storing frames",
+                desciption:
+                  "If true, native scaler will use shared memory (via `t:Shmex.t/0`) for storing frames",
                 default: false
               ]
 
@@ -69,9 +70,9 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
         :input,
         %Buffer{payload: payload} = buffer,
         _context,
-        %{native_state: native_state, shared_payload: shared_payload} = state
+        %{native_state: native_state, use_shm?: use_shm?} = state
       ) do
-    with {:ok, frame} <- Native.scale(payload, shared_payload, native_state) do
+    with {:ok, frame} <- Native.scale(payload, use_shm?, native_state) do
       buffer = [buffer: {:output, %{buffer | payload: frame}}]
 
       {{:ok, buffer}, state}
