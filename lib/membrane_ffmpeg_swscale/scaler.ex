@@ -31,6 +31,11 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
               output_height: [
                 type: :int,
                 description: "Height of the scaled video."
+              ],
+              shared_payload: [
+                type: :boolean,
+                desciption: "If true, native scaler will use shared memory for storing frames",
+                default: false
               ]
 
   def_input_pad :input,
@@ -64,9 +69,9 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
         :input,
         %Buffer{payload: payload} = buffer,
         _context,
-        %{native_state: native_state} = state
+        %{native_state: native_state, shared_payload: shared_payload} = state
       ) do
-    with {:ok, frame} <- Native.scale(payload, native_state) do
+    with {:ok, frame} <- Native.scale(payload, shared_payload, native_state) do
       buffer = [buffer: {:output, %{buffer | payload: frame}}]
 
       {{:ok, buffer}, state}

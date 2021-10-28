@@ -9,4 +9,4 @@ spec create(
     output_height :: int
 ) :: {:ok :: label, state} | {:error :: label, reason :: atom}
 
-spec scale(payload, state) :: {:ok :: label, payload} | {:error :: label, reason :: atom}
+spec scale(payload, shared_payload :: bool, state) :: {:ok :: label, payload} | {:error :: label, reason :: atom}
