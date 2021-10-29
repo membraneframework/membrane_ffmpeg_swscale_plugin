@@ -174,7 +174,7 @@ void add_paddings(uint8_t *scaled_data[4], int scaled_width, int scaled_height,
   }
 }
 
-UNIFEX_TERM scale(UnifexEnv *env, UnifexPayload *payload, State *state) {
+UNIFEX_TERM scale(UnifexEnv *env, UnifexPayload *payload, int use_shm, State *state) {
   UNIFEX_TERM res;
 
   enum AVPixelFormat pixel_format = AV_PIX_FMT_YUV420P;
@@ -199,7 +199,13 @@ UNIFEX_TERM scale(UnifexEnv *env, UnifexPayload *payload, State *state) {
       pixel_format, state->output_width, state->output_height, 1);
 
   UnifexPayload frame;
-  unifex_payload_alloc(env, UNIFEX_PAYLOAD_SHM, payload_size, &frame);
+  UnifexPayloadType payload_type;
+  if (use_shm) {
+    payload_type = UNIFEX_PAYLOAD_SHM;
+  } else {
+    payload_type = UNIFEX_PAYLOAD_BINARY;
+  }
+  unifex_payload_alloc(env, payload_type, payload_size, &frame);
 
   if (av_image_copy_to_buffer(
           frame.data, payload_size, (const uint8_t *const *)state->output_data,

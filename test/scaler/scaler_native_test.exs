@@ -27,7 +27,7 @@ defmodule Scaler.NativeTest do
 
   defp scale(input_data, native_state, input_frame_size, scaled_frame_size) do
     for <<frame::bytes-size(input_frame_size) <- input_data>> do
-      assert {:ok, scaled_frame} = Scaler.scale(frame, native_state)
+      assert {:ok, scaled_frame} = Scaler.scale(frame, false, native_state)
       assert Payload.size(scaled_frame) == scaled_frame_size
 
       Membrane.Payload.to_binary(scaled_frame)
