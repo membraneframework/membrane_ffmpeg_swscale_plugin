@@ -72,25 +72,27 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
         _context,
         %{native_state: native_state, use_shm?: use_shm?} = state
       ) do
-    with {:ok, frame} <- Native.scale(payload, use_shm?, native_state) do
-      buffer = [buffer: {:output, %{buffer | payload: frame}}]
+    case Native.scale(payload, use_shm?, native_state) do
+      {:ok, frame} ->
+        buffer = [buffer: {:output, %{buffer | payload: frame}}]
+        {{:ok, buffer}, state}
 
-      {{:ok, buffer}, state}
-    else
-      {:error, reason} -> {{:error, reason}, state}
+      {:error, reason} ->
+        {{:error, reason}, state}
     end
   end
 
   @impl true
   def handle_caps(:input, %Raw{width: width, height: height} = caps, _context, state) do
-    with {:ok, native_state} <-
-           Native.create(width, height, state.output_width, state.output_height) do
-      caps = %{caps | width: state.output_width, height: state.output_height}
-      state = %{state | native_state: native_state}
+    case Native.create(width, height, state.output_width, state.output_height) do
+      {:ok, native_state} ->
+        caps = %{caps | width: state.output_width, height: state.output_height}
+        state = %{state | native_state: native_state}
 
-      {{:ok, caps: {:output, caps}}, state}
-    else
-      {:error, reason} -> raise(RuntimeError, reason)
+        {{:ok, caps: {:output, caps}}, state}
+
+      {:error, reason} ->
+        raise(RuntimeError, reason)
     end
   end
 
