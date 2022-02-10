@@ -6,33 +6,19 @@ defmodule Membrane.FFmpeg.SWScale.PixFmtConverter do
 
   alias __MODULE__.Native
   alias Membrane.Buffer
+  alias Membrane.Caps.Video.Raw
 
   def_input_pad :input,
-    caps: {Membrane.Caps.Video.Raw, aligned: true},
+    caps: {Raw, aligned: true},
     availability: :always,
     demand_unit: :buffers
 
   def_output_pad :output,
-    caps: {Membrane.Caps.Video.Raw, aligned: true},
+    caps: {Raw, aligned: true},
     availability: :always
 
-  def_options width: [
-                spec: non_neg_integer() | nil,
-                default: nil,
-                description: """
-                Desired width of output video.
-                """
-              ],
-              height: [
-                spec: non_neg_integer() | nil,
-                default: nil,
-                description: """
-                Desired height of output video.
-                """
-              ],
-              format: [
-                spec: Membrane.Caps.Video.Raw.format_t() | nil,
-                default: nil,
+  def_options format: [
+                spec: Raw.format_t(),
                 description: """
                 Desired pixel format of output video.
                 """
@@ -40,12 +26,7 @@ defmodule Membrane.FFmpeg.SWScale.PixFmtConverter do
 
   @impl true
   def handle_init(%__MODULE__{} = opts) do
-    opts =
-      Map.from_struct(opts) |> Enum.reject(fn {_key, value} -> is_nil(value) end) |> Map.new()
-
-    validate_opts(opts)
-
-    {:ok, %{native: nil, options: opts}}
+    {:ok, %{native: nil, format: opts.format}}
   end
 
   @impl true
@@ -54,13 +35,10 @@ defmodule Membrane.FFmpeg.SWScale.PixFmtConverter do
   end
 
   @impl true
-  def handle_caps(:input, %Membrane.Caps.Video.Raw{} = caps, _ctx, state) do
-    new_caps =
-      Map.from_struct(caps)
-      |> Map.merge(state.options)
-      |> then(&struct!(Membrane.Caps.Video.Raw, Enum.to_list(&1)))
+  def handle_caps(:input, %Raw{} = caps, _ctx, state) do
+    new_caps = %Raw{caps | format: state.format}
 
-    with {:ok, native} <- Native.create(caps.width, caps.height, caps.format, new_caps.format),
+    with {:ok, native} <- Native.create(caps.width, caps.height, caps.format, state.format),
          do: {{:ok, caps: {:output, new_caps}}, %{state | native: native}}
   end
 
@@ -73,14 +51,5 @@ defmodule Membrane.FFmpeg.SWScale.PixFmtConverter do
     {:ok, payload} = Native.process(state.native, buffer.payload)
     buffer = %Buffer{buffer | payload: payload}
     {{:ok, buffer: {:output, buffer}}, state}
-  end
-
-  defp validate_opts(opts) do
-    width? = Map.has_key?(opts, :width)
-    height? = Map.has_key?(opts, :height)
-
-    if (width? and not height?) or (height? and not width?) do
-      raise("You have to specify both width and height or neither.")
-    end
   end
 end
