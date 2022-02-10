@@ -1,4 +1,4 @@
-defmodule Membrane.FFmpeg.SWScale do
+defmodule Membrane.FFmpeg.SWScale.PixFmtConverter do
   @moduledoc """
   Element wrapping functionality of FFmpeg's `libswscale` of raw video pixel format conversion and resolution scaling.
   """
@@ -60,7 +60,7 @@ defmodule Membrane.FFmpeg.SWScale do
       |> Map.merge(state.options)
       |> then(&struct!(Membrane.Caps.Video.Raw, Enum.to_list(&1)))
 
-    with {:ok, native} <- Native.create(caps, new_caps),
+    with {:ok, native} <- Native.create(caps.width, caps.height, caps.format, new_caps.format),
          do: {{:ok, caps: {:output, new_caps}}, %{state | native: native}}
   end
 
@@ -82,4 +82,5 @@ defmodule Membrane.FFmpeg.SWScale do
     if (width? and not height?) or (height? and not width?) do
       raise("You have to specify both width and height or neither.")
     end
+  end
 end

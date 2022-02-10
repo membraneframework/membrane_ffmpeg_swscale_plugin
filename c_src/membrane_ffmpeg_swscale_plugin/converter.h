@@ -5,7 +5,7 @@
 typedef struct State
 {
   struct SwsContext* sws_context;
-  int srcWidth, srcHeight;
+  int width, height;
   enum AVPixelFormat srcFormat;
   enum AVPixelFormat dstFormat;
 } State;
