@@ -11,13 +11,13 @@ defmodule Membrane.FFmpeg.SWScale.BundlexProject do
     [
       scaler: [
         interface: :nif,
-        sources: ["scaler.c"],
+        sources: ["scaler/scaler.c"],
         pkg_configs: ["libswscale", "libavutil"],
         preprocessor: Unifex
       ],
       converter: [
         interface: :nif,
-        sources: ["converter.c"],
+        sources: ["converter/converter.c"],
         pkg_configs: ["libswscale", "libavutil"],
         preprocessor: Unifex
       ]

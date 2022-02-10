@@ -7,7 +7,7 @@
 enum AVPixelFormat string_to_format(char *);
 
 UNIFEX_TERM create(UnifexEnv *env, unsigned int width, unsigned int height,
-                      char *old_format, char *new_format) {
+                   char *old_format, char *new_format) {
   const enum AVPixelFormat input_fmt = string_to_format(old_format),
                            output_fmt = string_to_format(new_format);
 
@@ -25,28 +25,34 @@ UNIFEX_TERM create(UnifexEnv *env, unsigned int width, unsigned int height,
 
   State *state = unifex_alloc_state(env);
   state->sws_context =
-      sws_getContext(width, height, input_fmt, width, height,
-                     output_fmt, SWS_BICUBIC, NULL, NULL, NULL);
+      sws_getContext(width, height, input_fmt, width, height, output_fmt,
+                     SWS_BICUBIC, NULL, NULL, NULL);
   state->width = width;
   state->height = height;
   state->srcFormat = input_fmt;
+  state->dstFormat = output_fmt;
   UNIFEX_TERM res;
 
-  av_image_alloc(state->src_data, state->src_linesize, state->width, state->height,
-                 state->srcFormat, 16);
-  state->dst_image_size = av_image_alloc(state->dst_data, state->dst_linesize, state->width,
-                                      state->height, state->dstFormat, 1);
+  av_image_alloc(state->src_data, state->src_linesize, state->width,
+                 state->height, state->srcFormat, 16);
+  state->dst_image_size =
+      av_image_alloc(state->dst_data, state->dst_linesize, state->width,
+                     state->height, state->dstFormat, 1);
 
   if (state->sws_context == NULL) {
     res = create_result_error(env, "unable_to_create_context");
     goto end;
   }
-  
-  if(state->dst_image_size < 0) {
+
+  if (state->dst_image_size < 0) {
+    char* error = malloc(255);
+    av_make_error_string(error, 255, state->dst_image_size);
+    fprintf(stderr, "Error: %s\n", error);
+    free(error);
     res = create_result_error(env, "unable_to_allocate_dst_image");
     goto end;
   }
-  
+
   res = create_result_ok(env, state);
 end:
   unifex_release_state(env, state);
@@ -56,12 +62,13 @@ end:
 UNIFEX_TERM process(UnifexEnv *env, State *state, UnifexPayload *payload) {
   UNIFEX_TERM ret;
 
-  av_image_fill_arrays(state->src_data, state->src_linesize, payload->data, state->srcFormat,
-                       state->width, state->height, 16);
+  av_image_fill_arrays(state->src_data, state->src_linesize, payload->data,
+                       state->srcFormat, state->width, state->height, 16);
 
   int scaling_result =
-      sws_scale(state->sws_context, (const uint8_t *const *) state->src_data,
-                state->src_linesize, 0, state->height, state->dst_data, state->dst_linesize);
+      sws_scale(state->sws_context, (const uint8_t *const *)state->src_data,
+                state->src_linesize, 0, state->height, state->dst_data,
+                state->dst_linesize);
   if (scaling_result < 0) {
     char *error = malloc(100);
     fprintf(stderr, "Error while scaling: %s\n",

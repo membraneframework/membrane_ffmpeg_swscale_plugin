@@ -6,8 +6,7 @@ typedef struct State
 {
   struct SwsContext* sws_context;
   int width, height;
-  enum AVPixelFormat srcFormat;
-  enum AVPixelFormat dstFormat;
+  enum AVPixelFormat srcFormat, dstFormat;
 
   // Scaling buffers for 
   uint8_t *src_data[4], *dst_data[4];
