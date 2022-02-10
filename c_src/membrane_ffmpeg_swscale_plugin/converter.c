@@ -32,37 +32,36 @@ UNIFEX_TERM create(UnifexEnv *env, unsigned int width, unsigned int height,
   state->srcFormat = input_fmt;
   UNIFEX_TERM res;
 
+  av_image_alloc(state->src_data, state->src_linesize, state->width, state->height,
+                 state->srcFormat, 16);
+  state->dst_image_size = av_image_alloc(state->dst_data, state->dst_linesize, state->width,
+                                      state->height, state->dstFormat, 1);
+
   if (state->sws_context == NULL) {
     res = create_result_error(env, "unable_to_create_context");
-  } else {
-    res = create_result_ok(env, state);
+    goto end;
   }
-
+  
+  if(state->dst_image_size < 0) {
+    res = create_result_error(env, "unable_to_allocate_dst_image");
+    goto end;
+  }
+  
+  res = create_result_ok(env, state);
+end:
   unifex_release_state(env, state);
   return res;
 }
 
 UNIFEX_TERM process(UnifexEnv *env, State *state, UnifexPayload *payload) {
-  uint8_t *src_data[4], *dst_data[4];
-  int src_linesize[4], dst_linesize[4];
-
   UNIFEX_TERM ret;
 
-  av_image_alloc(src_data, src_linesize, state->width, state->height,
-                 state->srcFormat, 16);
-  int dst_image_size = av_image_alloc(dst_data, dst_linesize, state->width,
-                                      state->height, state->dstFormat, 1);
-  av_image_fill_arrays(src_data, src_linesize, payload->data, state->srcFormat,
+  av_image_fill_arrays(state->src_data, state->src_linesize, payload->data, state->srcFormat,
                        state->width, state->height, 16);
 
-  if (dst_image_size < 0) {
-    ret = process_result_error(env, "unable_to_allocate_output_image");
-    goto end;
-  }
-
   int scaling_result =
-      sws_scale(state->sws_context, (const uint8_t *const *)src_data,
-                src_linesize, 0, state->height, dst_data, dst_linesize);
+      sws_scale(state->sws_context, (const uint8_t *const *) state->src_data,
+                state->src_linesize, 0, state->height, state->dst_data, state->dst_linesize);
   if (scaling_result < 0) {
     char *error = malloc(100);
     fprintf(stderr, "Error while scaling: %s\n",
@@ -73,9 +72,9 @@ UNIFEX_TERM process(UnifexEnv *env, State *state, UnifexPayload *payload) {
   }
 
   UnifexPayload output_payload;
-  unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, dst_image_size,
+  unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, state->dst_image_size,
                        &output_payload);
-  memcpy(output_payload.data, dst_data[0], dst_image_size);
+  memcpy(output_payload.data, state->dst_data[0], state->dst_image_size);
   ret = process_result_ok(env, &output_payload);
   unifex_payload_release(&output_payload);
 end:
