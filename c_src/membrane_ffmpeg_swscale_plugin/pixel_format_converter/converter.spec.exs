@@ -1,4 +1,4 @@
-module Membrane.FFmpeg.SWScale.PixFmtConverter.Native
+module Membrane.FFmpeg.SWScale.PixelFormatConverter.Native
 state_type "State"
 
 spec create( width :: uint, height :: uint, old_format :: atom, new_format :: atom) :: {:ok :: label, state} | {:error :: label, reason :: atom}

@@ -4,12 +4,12 @@
 #include <libavutil/imgutils.h>
 #include <libswscale/swscale.h>
 
-enum AVPixelFormat string_to_format(char *);
+enum AVPixelFormat string_to_AVPixelFormat(char *);
 
 UNIFEX_TERM create(UnifexEnv *env, unsigned int width, unsigned int height,
                    char *old_format, char *new_format) {
-  const enum AVPixelFormat input_fmt = string_to_format(old_format),
-                           output_fmt = string_to_format(new_format);
+  const enum AVPixelFormat input_fmt = string_to_AVPixelFormat(old_format),
+                           output_fmt = string_to_AVPixelFormat(new_format);
 
   if (input_fmt == AV_PIX_FMT_NONE) {
     return create_result_error(env, "invalid_input_format");
@@ -94,22 +94,22 @@ void handle_destroy_state(UnifexEnv *_env, State *state) {
   }
 }
 
-enum AVPixelFormat string_to_format(char *string) {
-  if (strcmp(string, "I420") == 0) {
+enum AVPixelFormat string_to_AVPixelFormat(char *format) {
+  if (strcmp(format, "I420") == 0) {
     return AV_PIX_FMT_YUV420P;
-  } else if (strcmp(string, "I422") == 0) {
+  } else if (strcmp(format, "I422") == 0) {
     return AV_PIX_FMT_YUV422P;
-  } else if (strcmp(string, "I444") == 0) {
+  } else if (strcmp(format, "I444") == 0) {
     return AV_PIX_FMT_YUV444P;
-  } else if (strcmp(string, "RGB") == 0) {
+  } else if (strcmp(format, "RGB") == 0) {
     return AV_PIX_FMT_RGB24;
-  } else if (strcmp(string, "RGBA") == 0) {
+  } else if (strcmp(format, "RGBA") == 0) {
     return AV_PIX_FMT_RGBA;
-  } else if (strcmp(string, "NV12") == 0) {
+  } else if (strcmp(format, "NV12") == 0) {
     return AV_PIX_FMT_NV12;
-  } else if (strcmp(string, "NV21") == 0) {
+  } else if (strcmp(format, "NV21") == 0) {
     return AV_PIX_FMT_NV21;
-  } else if (strcmp(string, "YV12") == 0) {
+  } else if (strcmp(format, "YV12") == 0) {
     return AV_PIX_FMT_YUVA420P;
   } else {
     return AV_PIX_FMT_NONE;

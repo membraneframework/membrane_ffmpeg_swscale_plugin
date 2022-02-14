@@ -1,4 +1,4 @@
-defmodule Membrane.FFmpeg.SWScale.PixFmtConverter do
+defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
   @moduledoc """
   Element wrapping functionality of FFmpeg's `libswscale` of raw video pixel format conversion and resolution scaling.
   """
