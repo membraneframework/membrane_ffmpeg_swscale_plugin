@@ -41,9 +41,11 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
 
   def_input_pad :input,
     demand_unit: :buffers,
+    demand_mode: :auto,
     caps: {Raw, format: :I420, aligned: true}
 
   def_output_pad :output,
+    demand_mode: :auto,
     caps: {Raw, format: :I420, aligned: true}
 
   @impl true
@@ -54,11 +56,6 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
       |> Map.put(:native_state, nil)
 
     {:ok, state}
-  end
-
-  @impl true
-  def handle_demand(:output, size, :buffers, _context, state) do
-    {{:ok, demand: {:input, size}}, state}
   end
 
   @impl true
