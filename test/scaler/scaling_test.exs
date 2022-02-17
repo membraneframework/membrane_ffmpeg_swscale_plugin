@@ -30,7 +30,7 @@ defmodule ScalerTest do
       pipeline_options = %Pipeline.Options{
         elements: [
           file_src: %Membrane.File.Source{location: input_path},
-          parser: %Membrane.Element.RawVideo.Parser{
+          parser: %Membrane.RawVideo.Parser{
             format: :I420,
             width: 1280,
             height: 720
