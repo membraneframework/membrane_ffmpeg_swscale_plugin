@@ -1,7 +1,7 @@
 defmodule Membrane.FFmpeg.SWScale.Mixfile do
   use Mix.Project
 
-  @version "0.5.1"
+  @version "0.6.0"
   @github_url "https://github.com/membraneframework/membrane_ffmpeg_swscale_plugin"
 
   def project do
