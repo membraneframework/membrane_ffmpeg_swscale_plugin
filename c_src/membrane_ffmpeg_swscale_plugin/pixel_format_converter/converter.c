@@ -34,7 +34,7 @@ UNIFEX_TERM create(UnifexEnv *env, unsigned int width, unsigned int height,
   UNIFEX_TERM res;
 
   av_image_alloc(state->src_data, state->src_linesize, state->width,
-                 state->height, state->srcFormat, 16);
+                 state->height, state->srcFormat, 1);
   state->dst_image_size =
       av_image_alloc(state->dst_data, state->dst_linesize, state->width,
                      state->height, state->dstFormat, 1);
@@ -45,7 +45,7 @@ UNIFEX_TERM create(UnifexEnv *env, unsigned int width, unsigned int height,
   }
 
   if (state->dst_image_size < 0) {
-    char* error = malloc(255);
+    char *error = malloc(255);
     av_make_error_string(error, 255, state->dst_image_size);
     fprintf(stderr, "Error: %s\n", error);
     free(error);
@@ -63,11 +63,11 @@ UNIFEX_TERM process(UnifexEnv *env, State *state, UnifexPayload *payload) {
   UNIFEX_TERM ret;
 
   av_image_fill_arrays(state->src_data, state->src_linesize, payload->data,
-                       state->srcFormat, state->width, state->height, 16);
+                       state->srcFormat, state->width, state->height, 1);
 
   int scaling_result =
       sws_scale(state->sws_context, (const uint8_t *const *)state->src_data,
-                state->src_linesize, 0, state->height, state->dst_data,
+                (const int*) state->src_linesize, 0, state->height, state->dst_data,
                 state->dst_linesize);
   if (scaling_result < 0) {
     char *error = malloc(100);
@@ -78,11 +78,19 @@ UNIFEX_TERM process(UnifexEnv *env, State *state, UnifexPayload *payload) {
     goto end;
   }
 
+  size_t payload_size = av_image_get_buffer_size(state->dstFormat, state->width, state->height, 1);
+
   UnifexPayload output_payload;
-  unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, state->dst_image_size,
+  unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, payload_size,
                        &output_payload);
-  memcpy(output_payload.data, state->dst_data[0], state->dst_image_size);
-  ret = process_result_ok(env, &output_payload);
+  if (av_image_copy_to_buffer(output_payload.data, payload_size,
+                              (const uint8_t *const *)state->dst_data,
+                              (const int*) state->dst_linesize, state->dstFormat,
+                              state->width, state->height, 1) < 0) {
+    ret = process_result_error(env, "unable_to_copy_to_buffer");
+  } else {
+    ret = process_result_ok(env, &output_payload);
+  }
   unifex_payload_release(&output_payload);
 end:
   return ret;
