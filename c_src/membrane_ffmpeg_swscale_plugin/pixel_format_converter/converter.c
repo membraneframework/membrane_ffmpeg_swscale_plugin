@@ -33,6 +33,7 @@ UNIFEX_TERM create(UnifexEnv *env, uint64_t width, uint64_t height,
   state->dstFormat = output_fmt;
   UNIFEX_TERM res;
 
+  // Allocate memory for both the input and outputframes
   av_image_alloc(state->src_data, state->src_linesize, state->width,
                  state->height, state->srcFormat, 1);
   state->dst_image_size =
@@ -45,10 +46,6 @@ UNIFEX_TERM create(UnifexEnv *env, uint64_t width, uint64_t height,
   }
 
   if (state->dst_image_size < 0) {
-    char *error = malloc(255);
-    av_make_error_string(error, 255, state->dst_image_size);
-    fprintf(stderr, "Error: %s\n", error);
-    free(error);
     res = create_result_error(env, "unable_to_allocate_dst_image");
     goto end;
   }
@@ -62,29 +59,23 @@ end:
 UNIFEX_TERM process(UnifexEnv *env, State *state, UnifexPayload *payload) {
   UNIFEX_TERM ret;
 
+  // copy input to av_image
   av_image_fill_arrays(state->src_data, state->src_linesize, payload->data,
                        state->srcFormat, state->width, state->height, 1);
 
-  int scaling_result =
-      sws_scale(state->sws_context, (const uint8_t *const *)state->src_data,
+  // perform the conversion
+  if (sws_scale(state->sws_context, (const uint8_t *const *)state->src_data,
                 (const int *)state->src_linesize, 0, state->height,
-                state->dst_data, state->dst_linesize);
-  if (scaling_result < 0) {
-    char *error = malloc(100);
-    fprintf(stderr, "Error while scaling: %s\n",
-            av_make_error_string(error, 100, scaling_result));
+                state->dst_data, state->dst_linesize) < 0) {
     ret = process_result_error(env, "scaling_failed");
-    free(error);
     goto end;
   }
 
-  size_t payload_size = av_image_get_buffer_size(state->dstFormat, state->width,
-                                                 state->height, 1);
-
   UnifexPayload output_payload;
-  unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, payload_size,
+  unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, state->dst_image_size,
                        &output_payload);
-  if (av_image_copy_to_buffer(output_payload.data, payload_size,
+  // copy output from av_frame to buffer
+  if (av_image_copy_to_buffer(output_payload.data, state->dst_image_size,
                               (const uint8_t *const *)state->dst_data,
                               (const int *)state->dst_linesize,
                               state->dstFormat, state->width, state->height,

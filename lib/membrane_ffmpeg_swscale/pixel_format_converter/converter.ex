@@ -1,6 +1,7 @@
 defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
   @moduledoc """
-  Element wrapping functionality of FFmpeg's `libswscale` of raw video pixel format conversion and resolution scaling.
+  This element performs conversion between pixel formats of raw video.
+  Only formats defined in the type `t:Membrane.RawVideo.pixel_format_t()` are supported, both as input and output
   """
   use Membrane.Filter
 
@@ -11,11 +12,13 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
   def_input_pad :input,
     caps: {RawVideo, aligned: true},
     availability: :always,
-    demand_unit: :buffers
+    demand_unit: :buffers,
+    demand_mode: :auto
 
   def_output_pad :output,
     caps: {RawVideo, aligned: true},
-    availability: :always
+    availability: :always,
+    demand_mode: :auto
 
   def_options format: [
                 spec: RawVideo.pixel_format_t(),
@@ -27,11 +30,6 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
   @impl true
   def handle_init(%__MODULE__{} = opts) do
     {:ok, %{native: nil, format: opts.format}}
-  end
-
-  @impl true
-  def handle_demand(:output, size, :buffers, _ctx, state) do
-    {{:ok, demand: {:input, size}}, state}
   end
 
   @impl true
