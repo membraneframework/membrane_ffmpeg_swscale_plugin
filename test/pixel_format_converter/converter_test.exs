@@ -3,7 +3,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
 
   import Membrane.Testing.Assertions
 
-  alias Membrane.Caps.Video.Raw
+  alias Membrane.RawVideo
   alias Membrane.FFmpeg.SWScale.PixelFormatConverter
   alias Membrane.Buffer
   alias Membrane.Testing.Pipeline
@@ -12,18 +12,18 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
   @output [<<0x00, 0x00, 0x00>>] |> Stream.cycle() |> Enum.take(16) |> Enum.join()
   @input [<<0x00, 0x00, 0x00, 0xFF>>] |> Stream.cycle() |> Enum.take(16) |> Enum.join()
 
-  @input_caps %Raw{
+  @input_caps %RawVideo{
     framerate: {30, 1},
     aligned: true,
     width: 4,
     height: 4,
-    format: :RGBA
+    pixel_format: :RGBA
   }
 
   test "PixelFormatConverter can convert a single frame from RGBA to RBG" do
     assert {:ok, state} = PixelFormatConverter.handle_init(%PixelFormatConverter{format: :RGB})
 
-    assert {{:ok, caps: {:output, %Raw{format: :RGB}}}, state} =
+    assert {{:ok, caps: {:output, %RawVideo{pixel_format: :RGB}}}, state} =
              PixelFormatConverter.handle_caps(:input, @input_caps, nil, state)
 
     assert {{:ok, buffer: {:output, %Buffer{payload: output}}}, _state} =
@@ -40,8 +40,8 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
     opts = %Pipeline.Options{
       elements: [
         source: %Membrane.File.Source{location: "test/fixtures/input-10-400x400.raw"},
-        parser: %Membrane.Element.RawVideo.Parser{
-          format: :I420,
+        parser: %Membrane.RawVideo.Parser{
+          pixel_format: :I420,
           width: 400,
           height: 400
         },

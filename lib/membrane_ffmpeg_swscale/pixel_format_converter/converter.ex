@@ -6,19 +6,19 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
 
   alias __MODULE__.Native
   alias Membrane.Buffer
-  alias Membrane.Caps.Video.Raw
+  alias Membrane.RawVideo
 
   def_input_pad :input,
-    caps: {Raw, aligned: true},
+    caps: {RawVideo, aligned: true},
     availability: :always,
     demand_unit: :buffers
 
   def_output_pad :output,
-    caps: {Raw, aligned: true},
+    caps: {RawVideo, aligned: true},
     availability: :always
 
   def_options format: [
-                spec: Raw.format_t(),
+                spec: RawVideo.format_t(),
                 description: """
                 Desired pixel format of output video.
                 """
@@ -35,10 +35,10 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
   end
 
   @impl true
-  def handle_caps(:input, %Raw{} = caps, _ctx, state) do
-    new_caps = %Raw{caps | format: state.format}
+  def handle_caps(:input, %RawVideo{} = caps, _ctx, state) do
+    new_caps = %RawVideo{caps | pixel_format: state.format}
 
-    with {:ok, native} <- Native.create(caps.width, caps.height, caps.format, state.format),
+    with {:ok, native} <- Native.create(caps.width, caps.height, caps.pixel_format, state.format),
          do: {{:ok, caps: {:output, new_caps}}, %{state | native: native}}
   end
 

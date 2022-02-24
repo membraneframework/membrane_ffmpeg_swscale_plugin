@@ -43,6 +43,7 @@ defmodule Membrane.FFmpeg.SWScale.Mixfile do
       {:membrane_h264_ffmpeg_plugin, "~> 0.18", only: :test},
       {:membrane_raw_video_parser_plugin, "~> 0.7", only: :test},
       # Development
+      {:membrane_raw_video_parser_plugin, "~> 0.6", only: :test},
       {:ex_doc, "~> 0.28", only: :dev, runtime: false},
       {:dialyxir, "~> 1.1", only: :dev, runtime: false},
       {:credo, "~> 1.6", only: :dev, runtime: false}
