@@ -6,7 +6,7 @@
 
 enum AVPixelFormat string_to_AVPixelFormat(char *);
 
-UNIFEX_TERM create(UnifexEnv *env, unsigned int width, unsigned int height,
+UNIFEX_TERM create(UnifexEnv *env, uint64_t width, uint64_t height,
                    char *old_format, char *new_format) {
   const enum AVPixelFormat input_fmt = string_to_AVPixelFormat(old_format),
                            output_fmt = string_to_AVPixelFormat(new_format);
@@ -67,8 +67,8 @@ UNIFEX_TERM process(UnifexEnv *env, State *state, UnifexPayload *payload) {
 
   int scaling_result =
       sws_scale(state->sws_context, (const uint8_t *const *)state->src_data,
-                (const int*) state->src_linesize, 0, state->height, state->dst_data,
-                state->dst_linesize);
+                (const int *)state->src_linesize, 0, state->height,
+                state->dst_data, state->dst_linesize);
   if (scaling_result < 0) {
     char *error = malloc(100);
     fprintf(stderr, "Error while scaling: %s\n",
@@ -78,15 +78,17 @@ UNIFEX_TERM process(UnifexEnv *env, State *state, UnifexPayload *payload) {
     goto end;
   }
 
-  size_t payload_size = av_image_get_buffer_size(state->dstFormat, state->width, state->height, 1);
+  size_t payload_size = av_image_get_buffer_size(state->dstFormat, state->width,
+                                                 state->height, 1);
 
   UnifexPayload output_payload;
   unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, payload_size,
                        &output_payload);
   if (av_image_copy_to_buffer(output_payload.data, payload_size,
                               (const uint8_t *const *)state->dst_data,
-                              (const int*) state->dst_linesize, state->dstFormat,
-                              state->width, state->height, 1) < 0) {
+                              (const int *)state->dst_linesize,
+                              state->dstFormat, state->width, state->height,
+                              1) < 0) {
     ret = process_result_error(env, "unable_to_copy_to_buffer");
   } else {
     ret = process_result_ok(env, &output_payload);
@@ -96,7 +98,8 @@ end:
   return ret;
 }
 
-void handle_destroy_state(UnifexEnv *_env, State *state) {
+void handle_destroy_state(UnifexEnv *env, State *state) {
+  UNIFEX_UNUSED(env);
   if (state->sws_context) {
     sws_freeContext(state->sws_context);
   }

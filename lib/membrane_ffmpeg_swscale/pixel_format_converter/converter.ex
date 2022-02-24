@@ -18,7 +18,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
     availability: :always
 
   def_options format: [
-                spec: RawVideo.format_t(),
+                spec: RawVideo.pixel_format_t(),
                 description: """
                 Desired pixel format of output video.
                 """
