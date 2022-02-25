@@ -36,8 +36,11 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
   def handle_caps(:input, %RawVideo{} = caps, _ctx, state) do
     new_caps = %RawVideo{caps | pixel_format: state.format}
 
-    with {:ok, native} <- Native.create(caps.width, caps.height, caps.pixel_format, state.format),
-         do: {{:ok, caps: {:output, new_caps}}, %{state | native: native}}
+    with {:ok, native} <- Native.create(caps.width, caps.height, caps.pixel_format, state.format) do
+      {{:ok, caps: {:output, new_caps}}, %{state | native: native}}
+    else
+      {:error, reason} -> raise("libsws initialization failed. Reason: `#{inspect(reason)}`")
+    end
   end
 
   @impl true
@@ -46,8 +49,14 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
 
   @impl true
   def handle_process(:input, buffer, _ctx, state) do
-    {:ok, payload} = Native.process(state.native, buffer.payload)
-    buffer = %Buffer{buffer | payload: payload}
-    {{:ok, buffer: {:output, buffer}}, state}
+    with {:ok, payload} <- Native.process(state.native, buffer.payload) do
+      buffer = %Buffer{buffer | payload: payload}
+      {{:ok, buffer: {:output, buffer}}, state}
+    else
+      {:error, reason} ->
+        raise(
+          "An error has ocurred while processing the buffer. Error message: `#{inspect(reason)}`"
+        )
+    end
   end
 end
