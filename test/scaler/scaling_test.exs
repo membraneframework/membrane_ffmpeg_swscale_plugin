@@ -31,7 +31,7 @@ defmodule ScalerTest do
         elements: [
           file_src: %Membrane.File.Source{location: input_path},
           parser: %Membrane.RawVideo.Parser{
-            format: :I420,
+            pixel_format: :I420,
             width: 1280,
             height: 720
           },
