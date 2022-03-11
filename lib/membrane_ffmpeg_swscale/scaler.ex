@@ -21,8 +21,7 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
   """
   use Membrane.Filter
   alias __MODULE__.Native
-  alias Membrane.Buffer
-  alias Membrane.Caps.Video.Raw
+  alias Membrane.{Buffer, RawVideo}
 
   def_options output_width: [
                 type: :int,
@@ -42,11 +41,11 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
   def_input_pad :input,
     demand_unit: :buffers,
     demand_mode: :auto,
-    caps: {Raw, format: :I420, aligned: true}
+    caps: {RawVideo, pixel_format: :I420, aligned: true}
 
   def_output_pad :output,
     demand_mode: :auto,
-    caps: {Raw, format: :I420, aligned: true}
+    caps: {RawVideo, pixel_format: :I420, aligned: true}
 
   @impl true
   def handle_init(options) do
@@ -80,7 +79,7 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
   end
 
   @impl true
-  def handle_caps(:input, %Raw{width: width, height: height} = caps, _context, state) do
+  def handle_caps(:input, %RawVideo{width: width, height: height} = caps, _context, state) do
     case Native.create(width, height, state.output_width, state.output_height) do
       {:ok, native_state} ->
         caps = %{caps | width: state.output_width, height: state.output_height}
