@@ -8,17 +8,18 @@ enum AVPixelFormat string_to_AVPixelFormat(char *);
 
 UNIFEX_TERM create(UnifexEnv *env, uint64_t width, uint64_t height,
                    char *old_format, char *new_format) {
+  UNIFEX_TERM res;
   const enum AVPixelFormat input_fmt = string_to_AVPixelFormat(old_format),
                            output_fmt = string_to_AVPixelFormat(new_format);
 
   if (input_fmt == AV_PIX_FMT_NONE) {
-    return create_result_error(env, "invalid_input_format");
+    return create_result_error(env, "unknown_input_format");
   } else if (!sws_isSupportedInput(input_fmt)) {
     return create_result_error(env, "unsupported_input_format");
   }
 
   if (output_fmt == AV_PIX_FMT_NONE) {
-    return create_result_error(env, "invalid_output_format");
+    return create_result_error(env, "unknown_output_format");
   } else if (!sws_isSupportedOutput(output_fmt)) {
     return create_result_error(env, "unsupported_output_format");
   }
@@ -27,26 +28,28 @@ UNIFEX_TERM create(UnifexEnv *env, uint64_t width, uint64_t height,
   state->sws_context =
       sws_getContext(width, height, input_fmt, width, height, output_fmt,
                      SWS_BICUBIC, NULL, NULL, NULL);
+
+  if (state->sws_context == NULL) {
+    res = create_result_error(env, "create_context_failed");
+    goto end;
+  }
+
   state->width = width;
   state->height = height;
   state->srcFormat = input_fmt;
   state->dstFormat = output_fmt;
-  UNIFEX_TERM res;
 
   // Allocate memory for both the input and outputframes
-  av_image_alloc(state->src_data, state->src_linesize, state->width,
-                 state->height, state->srcFormat, 1);
+  int src_image_size =
+      av_image_alloc(state->src_data, state->src_linesize, state->width,
+                     state->height, state->srcFormat, 1);
   state->dst_image_size =
       av_image_alloc(state->dst_data, state->dst_linesize, state->width,
                      state->height, state->dstFormat, 1);
 
-  if (state->sws_context == NULL) {
-    res = create_result_error(env, "unable_to_create_context");
-    goto end;
-  }
-
-  if (state->dst_image_size < 0) {
-    res = create_result_error(env, "unable_to_allocate_dst_image");
+  if (src_image_size < 0 || state->dst_image_size < 0) {
+    sws_freeContext(state->sws_context);
+    res = create_result_error(env, "memory_allocation_failed");
     goto end;
   }
 
@@ -80,7 +83,7 @@ UNIFEX_TERM process(UnifexEnv *env, State *state, UnifexPayload *payload) {
                               (const int *)state->dst_linesize,
                               state->dstFormat, state->width, state->height,
                               1) < 0) {
-    ret = process_result_error(env, "unable_to_copy_to_buffer");
+    ret = process_result_error(env, "copy_to_buffer_failed");
   } else {
     ret = process_result_ok(env, &output_payload);
   }

@@ -8,9 +8,10 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
   alias Membrane.Buffer
   alias Membrane.Testing.Pipeline
 
+  # All black 4x4 RGBA image
+  @input [<<0x00, 0x00, 0x00, 0xFF>>] |> Stream.cycle() |> Enum.take(4 * 4) |> Enum.join()
   # All black 4x4 RGB24 image
-  @output [<<0x00, 0x00, 0x00>>] |> Stream.cycle() |> Enum.take(16) |> Enum.join()
-  @input [<<0x00, 0x00, 0x00, 0xFF>>] |> Stream.cycle() |> Enum.take(16) |> Enum.join()
+  @output [<<0x00, 0x00, 0x00>>] |> Stream.cycle() |> Enum.take(4 * 4) |> Enum.join()
 
   @input_caps %RawVideo{
     framerate: {30, 1},

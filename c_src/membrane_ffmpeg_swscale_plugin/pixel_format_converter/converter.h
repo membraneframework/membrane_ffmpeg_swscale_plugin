@@ -8,7 +8,6 @@ typedef struct State
   int width, height;
   enum AVPixelFormat srcFormat, dstFormat;
 
-  // Scaling buffers for 
   uint8_t *src_data[4], *dst_data[4];
   int src_linesize[4], dst_linesize[4];
   

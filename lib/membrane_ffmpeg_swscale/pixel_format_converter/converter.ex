@@ -45,7 +45,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
 
   @impl true
   def handle_process(:input, %Buffer{} = _buffer, _ctx, %{native: nil} = _state),
-    do: raise("Received buffer before caps. Cannot proceed.")
+    do: raise("A Buffer was received before any caps arrived. Cannot proceed")
 
   @impl true
   def handle_process(:input, buffer, _ctx, state) do
@@ -54,9 +54,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
       {{:ok, buffer: {:output, buffer}}, state}
     else
       {:error, reason} ->
-        raise(
-          "An error has ocurred while processing the buffer. Error message: `#{inspect(reason)}`"
-        )
+        raise("An error has ocurred while processing the buffer: `#{inspect(reason)}`")
     end
   end
 end
