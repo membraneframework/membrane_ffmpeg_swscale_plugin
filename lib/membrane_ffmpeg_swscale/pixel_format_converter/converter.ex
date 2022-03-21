@@ -39,7 +39,8 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
     with {:ok, native} <- Native.create(caps.width, caps.height, caps.pixel_format, state.format) do
       {{:ok, caps: {:output, new_caps}}, %{state | native: native}}
     else
-      {:error, reason} -> raise "Scaler nif context initialization failed. Reason: `#{inspect(reason)}`"
+      {:error, reason} ->
+        raise "Scaler nif context initialization failed. Reason: `#{inspect(reason)}`"
     end
   end
 
