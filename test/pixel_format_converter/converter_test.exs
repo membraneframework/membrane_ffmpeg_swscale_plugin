@@ -34,13 +34,15 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
     assert output == @output
   end
 
-  test "integration test" do
-    output_path = "/tmp/output-rgb-10-400x400.raw"
-    reference_path = "test/fixtures/output-rgb-10-400x400.raw"
+  @tag :tmp_dir
+  test "integration test", %{tmp_dir: tmp_dir} do
+    output_path = Path.join(tmp_dir, "output-rgb-10-400x400.raw")
+    reference_path = "../fixtures/output-rgb-10-400x400.raw" |> Path.expand(__DIR__)
+    input_path = "../fixtures/input-10-400x400.raw" |> Path.expand(__DIR__)
 
     opts = %Pipeline.Options{
       elements: [
-        source: %Membrane.File.Source{location: "test/fixtures/input-10-400x400.raw"},
+        source: %Membrane.File.Source{location: input_path},
         parser: %Membrane.RawVideo.Parser{
           pixel_format: :I420,
           width: 400,
@@ -51,15 +53,12 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
       ]
     }
 
-    on_exit(fn -> File.rm(output_path) end)
-
     assert {:ok, pipeline} = Pipeline.start_link(opts)
     Pipeline.play(pipeline)
 
     assert_pipeline_playback_changed(pipeline, :prepared, :playing)
     assert_end_of_stream(pipeline, :sink)
     Pipeline.stop_and_terminate(pipeline, blocking: true)
-    assert_pipeline_playback_changed(pipeline, :playing, :prepared)
 
     assert File.exists?(output_path)
     assert File.read!(output_path) == File.read!(reference_path)
