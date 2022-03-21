@@ -39,7 +39,7 @@ UNIFEX_TERM create(UnifexEnv *env, uint64_t width, uint64_t height,
   state->srcFormat = input_fmt;
   state->dstFormat = output_fmt;
 
-  // Allocate memory for both the input and outputframes
+  // Allocate memory for both the input and output frames
   int src_image_size =
       av_image_alloc(state->src_data, state->src_linesize, state->width,
                      state->height, state->srcFormat, 1);

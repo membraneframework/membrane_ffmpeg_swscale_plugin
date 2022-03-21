@@ -39,13 +39,14 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
     with {:ok, native} <- Native.create(caps.width, caps.height, caps.pixel_format, state.format) do
       {{:ok, caps: {:output, new_caps}}, %{state | native: native}}
     else
-      {:error, reason} -> raise("libsws initialization failed. Reason: `#{inspect(reason)}`")
+      {:error, reason} -> raise "Scaler nif context initialization failed. Reason: `#{inspect(reason)}`"
     end
   end
 
   @impl true
-  def handle_process(:input, %Buffer{} = _buffer, _ctx, %{native: nil} = _state),
-    do: raise("A Buffer was received before any caps arrived. Cannot proceed")
+  def handle_process(:input, %Buffer{} = _buffer, _ctx, %{native: nil} = _state) do
+    raise "A Buffer was received before any caps arrived. Cannot proceed"
+  end
 
   @impl true
   def handle_process(:input, buffer, _ctx, state) do
@@ -54,7 +55,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
       {{:ok, buffer: {:output, buffer}}, state}
     else
       {:error, reason} ->
-        raise("An error has ocurred while processing the buffer: `#{inspect(reason)}`")
+        raise "An error has ocurred while processing the buffer: `#{inspect(reason)}`"
     end
   end
 end
