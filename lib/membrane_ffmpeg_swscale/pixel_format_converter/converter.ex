@@ -1,22 +1,37 @@
 defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
   @moduledoc """
   This element performs conversion between pixel formats of raw video.
-  Only formats defined in the type `t:Membrane.RawVideo.pixel_format_t()` are supported, both as input and output
+
+  Only the following pixel formats are supported, both as input and output:
+  - I420
+  - I422
+  - I444
+  - RGB
+  - BGRA
+  - RGBA
+  - NV12
+  - NV21
+  - AYUV
   """
   use Membrane.Filter
 
   alias __MODULE__.Native
   alias Membrane.Buffer
   alias Membrane.RawVideo
+  alias Membrane.Caps.Matcher
+
+  @supported_pixel_formats [:I420, :I422, :I444, :RGB, :BGRA, :RGBA, :NV12, :NV21, :AYUV]
+  @supported_caps {RawVideo,
+                   aligned: true, pixel_format: Matcher.one_of(@supported_pixel_formats)}
 
   def_input_pad :input,
-    caps: {RawVideo, aligned: true},
+    caps: @supported_caps,
     availability: :always,
     demand_unit: :buffers,
     demand_mode: :auto
 
   def_output_pad :output,
-    caps: {RawVideo, aligned: true},
+    caps: @supported_caps,
     availability: :always,
     demand_mode: :auto
 
