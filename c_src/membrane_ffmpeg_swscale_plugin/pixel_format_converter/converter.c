@@ -4,6 +4,9 @@
 #include <libavutil/imgutils.h>
 #include <libswscale/swscale.h>
 
+#define ALIGNMENT 32
+#define NO_ALIGNMENT 1
+
 enum AVPixelFormat string_to_AVPixelFormat(char *);
 
 UNIFEX_TERM create(UnifexEnv *env, uint64_t width, uint64_t height,
@@ -36,18 +39,13 @@ UNIFEX_TERM create(UnifexEnv *env, uint64_t width, uint64_t height,
 
   state->width = width;
   state->height = height;
-  state->srcFormat = input_fmt;
-  state->dstFormat = output_fmt;
+  state->src_format = input_fmt;
+  state->dst_format = output_fmt;
 
   // Allocate memory for both the input and output frames
-  int src_image_size =
-      av_image_alloc(state->src_data, state->src_linesize, state->width,
-                     state->height, state->srcFormat, 1);
-  state->dst_image_size =
-      av_image_alloc(state->dst_data, state->dst_linesize, state->width,
-                     state->height, state->dstFormat, 1);
+  if (av_image_alloc(state->dst_data, state->dst_linesize, state->width,
+                     state->height, state->dst_format, ALIGNMENT) < 0) {
 
-  if (src_image_size < 0 || state->dst_image_size < 0) {
     sws_freeContext(state->sws_context);
     res = create_result_error(env, "memory_allocation_failed");
     goto end;
@@ -63,8 +61,11 @@ UNIFEX_TERM process(UnifexEnv *env, State *state, UnifexPayload *payload) {
   UNIFEX_TERM ret;
 
   // copy input to av_image
-  av_image_fill_arrays(state->src_data, state->src_linesize, payload->data,
-                       state->srcFormat, state->width, state->height, 1);
+  if (av_image_fill_arrays(state->src_data, state->src_linesize, payload->data,
+                           state->src_format, state->width, state->height,
+                           1) < 0) {
+    ret = process_result_error(env, "scaling_failed");
+  };
 
   // perform the conversion
   if (sws_scale(state->sws_context, (const uint8_t *const *)state->src_data,
@@ -74,15 +75,18 @@ UNIFEX_TERM process(UnifexEnv *env, State *state, UnifexPayload *payload) {
     goto end;
   }
 
+  int dst_image_size = av_image_get_buffer_size(state->dst_format, state->width,
+                                                state->height, NO_ALIGNMENT);
+
   UnifexPayload output_payload;
-  unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, state->dst_image_size,
+  unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, dst_image_size,
                        &output_payload);
   // copy output from av_frame to buffer
-  if (av_image_copy_to_buffer(output_payload.data, state->dst_image_size,
+  if (av_image_copy_to_buffer(output_payload.data, dst_image_size,
                               (const uint8_t *const *)state->dst_data,
                               (const int *)state->dst_linesize,
-                              state->dstFormat, state->width, state->height,
-                              1) < 0) {
+                              state->dst_format, state->width, state->height,
+                              NO_ALIGNMENT) < 0) {
     ret = process_result_error(env, "copy_to_buffer_failed");
   } else {
     ret = process_result_ok(env, &output_payload);

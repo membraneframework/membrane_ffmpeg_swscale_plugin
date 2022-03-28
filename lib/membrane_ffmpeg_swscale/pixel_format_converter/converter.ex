@@ -74,4 +74,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
         raise "An error has ocurred while processing the buffer: `#{inspect(reason)}`"
     end
   end
+
+  @impl true
+  def handle_playing_to_prepared(_ctx, state), do: {:ok, %{state | native: nil}}
 end
