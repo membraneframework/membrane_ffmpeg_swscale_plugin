@@ -8,30 +8,39 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
   alias Membrane.Buffer
   alias Membrane.Testing.Pipeline
 
-  # All black 4x4 RGBA image
-  @input [<<0x00, 0x00, 0x00, 0xFF>>] |> Stream.cycle() |> Enum.take(4 * 4) |> Enum.join()
-  # All black 4x4 RGB24 image
-  @output [<<0x00, 0x00, 0x00>>] |> Stream.cycle() |> Enum.take(4 * 4) |> Enum.join()
+  test "PixelFormatConverter can convert a single frame from RGB to I420" do
+    input_caps = %RawVideo{
+      framerate: {30, 1},
+      aligned: true,
+      width: 6,
+      height: 4,
+      pixel_format: :RGB
+    }
 
-  @input_caps %RawVideo{
-    framerate: {30, 1},
-    aligned: true,
-    width: 4,
-    height: 4,
-    pixel_format: :RGBA
-  }
+    pixels_count = input_caps.width * input_caps.height
 
-  test "PixelFormatConverter can convert a single frame from RGBA to RBG" do
-    assert {:ok, state} = PixelFormatConverter.handle_init(%PixelFormatConverter{format: :RGB})
+    rgb_input = <<0::8, 0::8, 0::8>> |> String.duplicate(pixels_count)
 
-    assert {{:ok, caps: {:output, %RawVideo{pixel_format: :RGB}}}, state} =
-             PixelFormatConverter.handle_caps(:input, @input_caps, nil, state)
+    i420_output =
+      [
+        # Y=16, Cb=128, Cr=128 the values for black according to proposal ITU 709 (Rec 709 or BT.709) and ITU 601 (HD and SD).
+        # https://en.wikipedia.org/wiki/Rec._709#Digital_representation
+        <<16::8>> |> String.duplicate(pixels_count),
+        <<128::8>> |> String.duplicate(pixels_count |> div(4)),
+        <<128::8>> |> String.duplicate(pixels_count |> div(4))
+      ]
+      |> Enum.join()
+
+    assert {:ok, state} = PixelFormatConverter.handle_init(%PixelFormatConverter{format: :I420})
+
+    assert {{:ok, caps: {:output, %RawVideo{pixel_format: :I420}}}, state} =
+             PixelFormatConverter.handle_caps(:input, input_caps, nil, state)
 
     assert {{:ok, buffer: {:output, %Buffer{payload: output}}}, _state} =
-             PixelFormatConverter.handle_process(:input, %Buffer{payload: @input}, nil, state)
+             PixelFormatConverter.handle_process(:input, %Buffer{payload: rgb_input}, nil, state)
 
-    assert byte_size(output) == byte_size(@output)
-    assert output == @output
+    assert bit_size(output) == pixels_count * 12
+    assert output == i420_output
   end
 
   @tag :tmp_dir
