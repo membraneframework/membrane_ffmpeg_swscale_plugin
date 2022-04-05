@@ -42,7 +42,7 @@ UNIFEX_TERM create(UnifexEnv *env, uint64_t width, uint64_t height,
   state->src_format = input_fmt;
   state->dst_format = output_fmt;
 
-  // Allocate memory for both the input and output frames
+  // Allocate memory for the output frame
   if (av_image_alloc(state->dst_data, state->dst_linesize, state->width,
                      state->height, state->dst_format, ALIGNMENT) < 0) {
 
@@ -60,7 +60,6 @@ end:
 UNIFEX_TERM process(UnifexEnv *env, State *state, UnifexPayload *payload) {
   UNIFEX_TERM ret;
 
-  // copy input to av_image
   if (av_image_fill_arrays(state->src_data, state->src_linesize, payload->data,
                            state->src_format, state->width, state->height,
                            1) < 0) {
