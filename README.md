@@ -4,7 +4,7 @@
 [![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat)](https://hexdocs.pm/membrane_ffmpeg_swscale_plugin/)
 [![CircleCI](https://circleci.com/gh/membraneframework/membrane_ffmpeg_swscale_plugin.svg?style=svg)](https://circleci.com/gh/membraneframework/membrane_ffmpeg_swscale_plugin)
 
-Plugin providing an element scaling raw video frames, using SWScale module of [FFmpeg](https://www.ffmpeg.org/) library.
+Plugin providing an element scaling raw video frames and performing pixel format conversions, using SWScale module of [FFmpeg](https://www.ffmpeg.org/) library.
 
 It is a part of [Membrane Multimedia Framework](https://membraneframework.org).
 
@@ -20,8 +20,16 @@ You also need to have [FFmpeg](https://www.ffmpeg.org/) library with development
 
 ## Description
 
+### PixelFormatConverter
+PixelFormatConverter accepts raw video in any of the pixel formats specified in type [`Membrane.RawVideo.pixel_format_t()`](https://hexdocs.pm/membrane_raw_video_format/Membrane.RawVideo.html#t:pixel_format_t/0)
+as input and is capable of producing output in any of these pixel formats.
+
+When creating the element you need to specify a single option `format` defining the desired pixel format of the output.
+The element requires `Membrane.RawVideo` caps on the input with `aligned: true` constraint, meaning that each buffer must contain exactly one raw video frame.
+
+### Scaler
 Scaler needs input in the YUV420p format, processes one frame at a time and requires getting caps with input video
-width and height. To meet all requirements either `Membrane.Element.RawVideo.Parser` or some decoder
+width and height. To meet all requirements either `Membrane.RawVideo.Parser` or some decoder
 (e.g. `Membrane.H264.FFmpeg.Decoder`) have to precede Scaler in the pipeline.
 
 There are two options that have to be specified when creating the element:
@@ -40,8 +48,7 @@ dimensions of the input frame match the respective dimension of the desired outp
 sides of the scaled frame equally. They are either above and below the frame or on the left and right sides of it.
 It depends on the dimension that did not match after scaling.
 
-The output of the element is also in the YUV420p format. It has the size as specified in the options. All
-caps except for width and height are passed unchanged to the next element in the pipeline.
+The output of the element is also in the YUV420p format. It has the size as specified in the options.
 
 ## Sample usage
 
