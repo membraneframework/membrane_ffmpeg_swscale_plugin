@@ -15,9 +15,8 @@ defmodule ScalerTest do
   end
 
   defp perform_test(output_path, pid) do
-    assert Pipeline.play(pid) == :ok
     assert_end_of_stream(pid, :sink, :input, 25_000)
-    Pipeline.stop_and_terminate(pid, blocking?: true)
+    Pipeline.terminate(pid, blocking?: true)
 
     assert {:ok, file} = File.read(output_path)
     assert byte_size(file) == 4_800_000
