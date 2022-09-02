@@ -54,7 +54,8 @@ The output of the element is also in the YUV420p format. It has the size as spec
 
 ### `Membrane.FFmpeg.SWScale.Scaler`
 
-Scaling encoded (using H.264 standard) video requires parser and decoder because Scaler scales only raw video.
+Scaling an encoded (using H.264 standard) video requires parser and decoder because Scaler scales only raw,
+decoded video. The pipeline scales the video and reencodes it.
 
 ```elixir
 defmodule Scaling.Pipeline do
@@ -87,9 +88,9 @@ end
 
 ### `Membrane.FFmpeg.SWScale.PixelFormatConverter`
 
-Converting pixel format of an encoded (using H.264 standard) video requires a parser and a decoder
-because the Converter performs convertion only on the raw video. The pipeline changes the pixel
-format of the video to the `I422` format.
+Converting the pixel format of an encoded (using H.264 standard) video requires a parser and a decoder
+because the Converter performs conversion only on the raw , decoded video. The pipeline changes the pixel
+format of the video to the `I422` format and reencodes it.
 
 ```elixir
 defmodule Converting.Pipeline do
