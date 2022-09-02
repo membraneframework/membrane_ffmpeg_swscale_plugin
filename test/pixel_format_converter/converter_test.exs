@@ -3,9 +3,8 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
 
   import Membrane.Testing.Assertions
 
-  alias Membrane.RawVideo
+  alias Membrane.{Buffer, RawVideo}
   alias Membrane.FFmpeg.SWScale.PixelFormatConverter
-  alias Membrane.Buffer
   alias Membrane.Testing.Pipeline
 
   test "PixelFormatConverter can convert a single frame from RGB to I420" do

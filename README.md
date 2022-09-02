@@ -6,7 +6,7 @@
 
 Plugin providing an element scaling raw video frames and performing pixel format conversions, using SWScale module of [FFmpeg](https://www.ffmpeg.org/) library.
 
-It is a part of [Membrane Multimedia Framework](https://membraneframework.org).
+It is a part of [Membrane Multimedia Framework](https://membrane.stream).
 
 ## Installation
 

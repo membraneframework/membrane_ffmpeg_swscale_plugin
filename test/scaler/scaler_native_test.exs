@@ -1,7 +1,7 @@
 defmodule Scaler.NativeTest do
   use ExUnit.Case, async: true
-  alias Membrane.Payload
   alias Membrane.FFmpeg.SWScale.Scaler.Native, as: Scaler
+  alias Membrane.Payload
 
   defp scaling_test({input_width, input_height, output_width, output_height}) do
     input_path = "../fixtures/input-10-#{input_width}x#{input_height}.raw" |> Path.expand(__DIR__)

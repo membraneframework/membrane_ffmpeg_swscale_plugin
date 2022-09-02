@@ -16,8 +16,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
   use Membrane.Filter
 
   alias __MODULE__.Native
-  alias Membrane.Buffer
-  alias Membrane.RawVideo
+  alias Membrane.{Buffer, RawVideo}
   alias Membrane.Caps.Matcher
 
   @supported_pixel_formats [:I420, :I422, :I444, :RGB, :BGRA, :RGBA, :NV12, :NV21, :AYUV]
