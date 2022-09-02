@@ -50,7 +50,9 @@ It depends on the dimension that did not match after scaling.
 
 The output of the element is also in the YUV420p format. It has the size as specified in the options.
 
-## Sample usage
+## Usage
+
+### `Membrane.FFmpeg.SWScale.Scaler`
 
 Scaling encoded (using H.264 standard) video requires parser and decoder because Scaler scales only raw video.
 
@@ -74,6 +76,41 @@ defmodule Scaling.Pipeline do
       |> to(:parser)
       |> to(:decoder)
       |> to(:scaler)
+      |> to(:encoder)
+      |> to(:file_sink)
+    ]
+
+    {{:ok, spec: %ParentSpec{children: children, links: links}}, %{}}
+  end
+end
+```
+
+### `Membrane.FFmpeg.SWScale.PixelFormatConverter`
+
+Converting pixel format of an encoded (using H.264 standard) video requires a parser and a decoder
+because the Converter performs convertion only on the raw video. The pipeline changes the pixel
+format of the video to the `I422` format.
+
+```elixir
+defmodule Converting.Pipeline do
+  use Membrane.Pipeline
+
+  @impl true
+  def handle_init(_) do
+    children = [
+      file_src: %Membrane.File.Source{location: "/tmp/input.h264"},
+      parser: Membrane.H264.FFmpeg.Parser,
+      decoder: Membrane.H264.FFmpeg.Decoder,
+      converter: %Membrane.FFmpeg.SWScale.PixelFormatConverter{format: :I422},
+      encoder: Membrane.H264.FFmpeg.Encoder,
+      file_sink: %Membrane.File.Sink{location: "/tmp/output.h264"}
+    ]
+
+    links = [
+      link(:file_src)
+      |> to(:parser)
+      |> to(:decoder)
+      |> to(:converter)
       |> to(:encoder)
       |> to(:file_sink)
     ]
