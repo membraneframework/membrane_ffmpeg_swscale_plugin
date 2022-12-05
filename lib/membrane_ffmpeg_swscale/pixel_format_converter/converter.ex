@@ -80,7 +80,4 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
         raise "An error has ocurred while processing the buffer: `#{inspect(reason)}`"
     end
   end
-
-  @impl true
-  def handle_setup(_ctx, state), do: {[], %{state | native: nil}}
 end

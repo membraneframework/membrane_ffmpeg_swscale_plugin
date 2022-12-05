@@ -41,11 +41,11 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
   def_input_pad :input,
     demand_unit: :buffers,
     demand_mode: :auto,
-    accepted_format: {RawVideo, pixel_format: :I420, aligned: true}
+    accepted_format: %RawVideo{pixel_format: :I420, aligned: true}
 
   def_output_pad :output,
     demand_mode: :auto,
-    accepted_format: {RawVideo, pixel_format: :I420, aligned: true}
+    accepted_format: %RawVideo{pixel_format: :I420, aligned: true}
 
   @impl true
   def handle_init(_ctx, options) do
@@ -98,11 +98,6 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
 
   @impl true
   def handle_end_of_stream(:input, _context, state) do
-    {[end_of_stream: :output, notify: {:end_of_stream, :input}], state}
-  end
-
-  @impl true
-  def handle_setup(_context, state) do
-    {[], %{state | native_state: nil}}
+    {[end_of_stream: :output], state}
   end
 end

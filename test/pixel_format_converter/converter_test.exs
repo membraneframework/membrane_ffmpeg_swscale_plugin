@@ -31,12 +31,13 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
       ]
       |> Enum.join()
 
-    assert {:ok, state} = PixelFormatConverter.handle_init(%PixelFormatConverter{format: :I420})
+    assert {[], state} =
+             PixelFormatConverter.handle_init(nil, %PixelFormatConverter{format: :I420})
 
-    assert {{:ok, caps: {:output, %RawVideo{pixel_format: :I420}}}, state} =
-             PixelFormatConverter.handle_caps(:input, input_caps, nil, state)
+    assert {[stream_format: {:output, %RawVideo{pixel_format: :I420}}], state} =
+             PixelFormatConverter.handle_stream_format(:input, input_caps, nil, state)
 
-    assert {{:ok, buffer: {:output, %Buffer{payload: output}}}, _state} =
+    assert {[buffer: {:output, %Buffer{payload: output}}], _state} =
              PixelFormatConverter.handle_process(:input, %Buffer{payload: rgb_input}, nil, state)
 
     assert bit_size(output) == pixels_count * 12
@@ -51,7 +52,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
 
     pipeline =
       Pipeline.start_link_supervised!(
-        elements: [
+        structure:
           child(:source, %Membrane.File.Source{location: input_path})
           |> child(:parser, %Membrane.RawVideo.Parser{
             pixel_format: :I420,
@@ -60,11 +61,11 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
           })
           |> child(:converter, %PixelFormatConverter{format: :RGB})
           |> child(:sink, %Membrane.File.Sink{location: output_path})
-        ]
       )
 
     assert_pipeline_play(pipeline)
-    assert_end_of_stream(pipeline, :sink)
+    assert_end_of_stream(pipeline, :sink, :input, 10_000)
+
     Pipeline.terminate(pipeline, blocking: true)
 
     assert File.exists?(output_path)

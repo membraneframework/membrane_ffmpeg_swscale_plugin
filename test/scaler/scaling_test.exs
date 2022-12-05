@@ -31,7 +31,7 @@ defmodule ScalerTest do
 
       pipeline =
         Pipeline.start_link_supervised!(
-          structure: [
+          structure:
             child(:file_src, %Membrane.File.Source{location: input_path})
             |> child(
               :parser,
@@ -46,7 +46,6 @@ defmodule ScalerTest do
               %Membrane.FFmpeg.SWScale.Scaler{output_width: 400, output_height: 800}
             )
             |> child(:sink, %Membrane.File.Sink{location: output_path})
-          ]
         )
 
       perform_test(output_path, pipeline)
@@ -57,7 +56,7 @@ defmodule ScalerTest do
 
       pipeline =
         Pipeline.start_link_supervised!(
-          structure: [
+          structure:
             child(:file_src, %Membrane.File.Source{location: input_path})
             |> child(:parser, H264.FFmpeg.Parser)
             |> child(:decoder, H264.FFmpeg.Decoder)
@@ -66,7 +65,6 @@ defmodule ScalerTest do
               output_height: 800
             })
             |> child(:sink, %Membrane.File.Sink{location: output_path})
-          ]
         )
 
       perform_test(output_path, pipeline)
