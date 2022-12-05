@@ -17,20 +17,21 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
 
   alias __MODULE__.Native
   alias Membrane.{Buffer, RawVideo}
-  alias Membrane.Caps.Matcher
 
   @supported_pixel_formats [:I420, :I422, :I444, :RGB, :BGRA, :RGBA, :NV12, :NV21, :AYUV]
-  @supported_caps {RawVideo,
-                   aligned: true, pixel_format: Matcher.one_of(@supported_pixel_formats)}
 
   def_input_pad :input,
-    caps: @supported_caps,
+    accepted_format:
+      %RawVideo{aligned: true, pixel_format: pixel_format}
+      when pixel_format in @supported_pixel_formats,
     availability: :always,
     demand_unit: :buffers,
     demand_mode: :auto
 
   def_output_pad :output,
-    caps: @supported_caps,
+    accepted_format:
+      %RawVideo{aligned: true, pixel_format: pixel_format}
+      when pixel_format in @supported_pixel_formats,
     availability: :always,
     demand_mode: :auto
 
@@ -42,16 +43,22 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
               ]
 
   @impl true
-  def handle_init(%__MODULE__{} = opts) do
+  def handle_init(_ctx, %__MODULE__{} = opts) do
     {:ok, %{native: nil, format: opts.format}}
   end
 
   @impl true
-  def handle_caps(:input, %RawVideo{} = caps, _ctx, state) do
-    new_caps = %RawVideo{caps | pixel_format: state.format}
+  def handle_stream_format(:input, %RawVideo{} = stream_format, _ctx, state) do
+    new_stream_format = %RawVideo{stream_format | pixel_format: state.format}
 
-    with {:ok, native} <- Native.create(caps.width, caps.height, caps.pixel_format, state.format) do
-      {{:ok, caps: {:output, new_caps}}, %{state | native: native}}
+    with {:ok, native} <-
+           Native.create(
+             stream_format.width,
+             stream_format.height,
+             stream_format.pixel_format,
+             state.format
+           ) do
+      {{:ok, stream_format: {:output, new_stream_format}}, %{state | native: native}}
     else
       {:error, reason} ->
         raise "Scaler nif context initialization failed. Reason: `#{inspect(reason)}`"
@@ -60,7 +67,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
 
   @impl true
   def handle_process(:input, %Buffer{} = _buffer, _ctx, %{native: nil} = _state) do
-    raise "A Buffer was received before any caps arrived. Cannot proceed"
+    raise "A Buffer was received before any stream format arrived. Cannot proceed"
   end
 
   @impl true
@@ -75,5 +82,5 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
   end
 
   @impl true
-  def handle_playing_to_prepared(_ctx, state), do: {:ok, %{state | native: nil}}
+  def handle_setup(_ctx, state), do: {[], %{state | native: nil}}
 end
