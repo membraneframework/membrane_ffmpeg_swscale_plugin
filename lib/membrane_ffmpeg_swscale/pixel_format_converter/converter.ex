@@ -44,7 +44,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
 
   @impl true
   def handle_init(_ctx, %__MODULE__{} = opts) do
-    {:ok, %{native: nil, format: opts.format}}
+    {[], %{native: nil, format: opts.format}}
   end
 
   @impl true
@@ -58,7 +58,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
              stream_format.pixel_format,
              state.format
            ) do
-      {{:ok, stream_format: {:output, new_stream_format}}, %{state | native: native}}
+      {[stream_format: {:output, new_stream_format}], %{state | native: native}}
     else
       {:error, reason} ->
         raise "Scaler nif context initialization failed. Reason: `#{inspect(reason)}`"
@@ -74,7 +74,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
   def handle_process(:input, buffer, _ctx, state) do
     with {:ok, payload} <- Native.process(state.native, buffer.payload) do
       buffer = %Buffer{buffer | payload: payload}
-      {{:ok, buffer: {:output, buffer}}, state}
+      {[buffer: {:output, buffer}], state}
     else
       {:error, reason} ->
         raise "An error has ocurred while processing the buffer: `#{inspect(reason)}`"

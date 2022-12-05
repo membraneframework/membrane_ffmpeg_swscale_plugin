@@ -33,7 +33,7 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
               ],
               use_shm?: [
                 type: :boolean,
-                desciption:
+                description:
                   "If true, native scaler will use shared memory (via `t:Shmex.t/0`) for storing frames",
                 default: false
               ]
@@ -54,7 +54,7 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
       |> Map.from_struct()
       |> Map.put(:native_state, nil)
 
-    {:ok, state}
+    {[], state}
   end
 
   @impl true
@@ -70,11 +70,10 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
       ) do
     case Native.scale(payload, use_shm?, native_state) do
       {:ok, frame} ->
-        buffer = [buffer: {:output, %{buffer | payload: frame}}]
-        {{:ok, buffer}, state}
+        {[buffer: {:output, %{buffer | payload: frame}}], state}
 
       {:error, reason} ->
-        {{:error, reason}, state}
+        raise "Scaling failed: #{reason}"
     end
   end
 
@@ -90,7 +89,7 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
         stream_format = %{stream_format | width: state.output_width, height: state.output_height}
         state = %{state | native_state: native_state}
 
-        {{:ok, stream_format: {:output, stream_format}}, state}
+        {[stream_format: {:output, stream_format}], state}
 
       {:error, reason} ->
         raise(RuntimeError, reason)
@@ -99,11 +98,11 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
 
   @impl true
   def handle_end_of_stream(:input, _context, state) do
-    {{:ok, end_of_stream: :output, notify: {:end_of_stream, :input}}, state}
+    {[end_of_stream: :output, notify: {:end_of_stream, :input}], state}
   end
 
   @impl true
-  def handle_prepared_to_stopped(_context, state) do
-    {:ok, %{state | native_state: nil}}
+  def handle_setup(_context, state) do
+    {[], %{state | native_state: nil}}
   end
 end
