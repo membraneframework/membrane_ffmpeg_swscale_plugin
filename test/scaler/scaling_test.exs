@@ -1,6 +1,9 @@
 defmodule ScalerTest do
   use ExUnit.Case
+
+  import Membrane.ChildrenSpec
   import Membrane.Testing.Assertions
+
   alias Membrane.H264
   alias Membrane.Testing.Pipeline
 
@@ -26,40 +29,47 @@ defmodule ScalerTest do
     test "scale 10 raw frames to 400x800" do
       {input_path, output_path} = prepare_paths("10-1280x720", "raw")
 
-      pipeline_options = %Pipeline.Options{
-        elements: [
-          file_src: %Membrane.File.Source{location: input_path},
-          parser: %Membrane.RawVideo.Parser{
-            pixel_format: :I420,
-            width: 1280,
-            height: 720
-          },
-          scaler: %Membrane.FFmpeg.SWScale.Scaler{output_width: 400, output_height: 800},
-          sink: %Membrane.File.Sink{location: output_path}
-        ]
-      }
+      pipeline =
+        Pipeline.start_link_supervised!(
+          structure: [
+            child(:file_src, %Membrane.File.Source{location: input_path})
+            |> child(
+              :parser,
+              %Membrane.RawVideo.Parser{
+                pixel_format: :I420,
+                width: 1280,
+                height: 720
+              }
+            )
+            |> child(
+              :scaler,
+              %Membrane.FFmpeg.SWScale.Scaler{output_width: 400, output_height: 800}
+            )
+            |> child(:sink, %Membrane.File.Sink{location: output_path})
+          ]
+        )
 
-      assert {:ok, pid} = Pipeline.start_link(pipeline_options)
-
-      perform_test(output_path, pid)
+      perform_test(output_path, pipeline)
     end
 
     test "scale 10 h264 frames to 400x800" do
       {input_path, output_path} = prepare_paths("10-1280x720", "h264")
 
-      pipeline_options = %Pipeline.Options{
-        elements: [
-          file_src: %Membrane.File.Source{location: input_path},
-          parser: H264.FFmpeg.Parser,
-          decoder: H264.FFmpeg.Decoder,
-          scaler: %Membrane.FFmpeg.SWScale.Scaler{output_width: 400, output_height: 800},
-          sink: %Membrane.File.Sink{location: output_path}
-        ]
-      }
+      pipeline =
+        Pipeline.start_link_supervised!(
+          structure: [
+            child(:file_src, %Membrane.File.Source{location: input_path})
+            |> child(:parser, H264.FFmpeg.Parser)
+            |> child(:decoder, H264.FFmpeg.Decoder)
+            |> child(:scaler, %Membrane.FFmpeg.SWScale.Scaler{
+              output_width: 400,
+              output_height: 800
+            })
+            |> child(:sink, %Membrane.File.Sink{location: output_path})
+          ]
+        )
 
-      assert {:ok, pid} = Pipeline.start_link(pipeline_options)
-
-      perform_test(output_path, pid)
+      perform_test(output_path, pipeline)
     end
   end
 end

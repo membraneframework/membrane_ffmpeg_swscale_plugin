@@ -1,6 +1,7 @@
 defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
   use ExUnit.Case
 
+  import Membrane.ChildrenSpec
   import Membrane.Testing.Assertions
 
   alias Membrane.{Buffer, RawVideo}
@@ -48,22 +49,21 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
     reference_path = "../fixtures/output-rgb-10-400x400.raw" |> Path.expand(__DIR__)
     input_path = "../fixtures/input-10-400x400.raw" |> Path.expand(__DIR__)
 
-    opts = %Pipeline.Options{
-      elements: [
-        source: %Membrane.File.Source{location: input_path},
-        parser: %Membrane.RawVideo.Parser{
-          pixel_format: :I420,
-          width: 400,
-          height: 400
-        },
-        converter: %PixelFormatConverter{format: :RGB},
-        sink: %Membrane.File.Sink{location: output_path}
-      ]
-    }
+    pipeline =
+      Pipeline.start_link_supervised!(
+        elements: [
+          child(:source, %Membrane.File.Source{location: input_path})
+          |> child(:parser, %Membrane.RawVideo.Parser{
+            pixel_format: :I420,
+            width: 400,
+            height: 400
+          })
+          |> child(:converter, %PixelFormatConverter{format: :RGB})
+          |> child(:sink, %Membrane.File.Sink{location: output_path})
+        ]
+      )
 
-    assert {:ok, pipeline} = Pipeline.start_link(opts)
-
-    assert_pipeline_playback_changed(pipeline, :prepared, :playing)
+    assert_pipeline_play(pipeline)
     assert_end_of_stream(pipeline, :sink)
     Pipeline.terminate(pipeline, blocking: true)
 
