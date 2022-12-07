@@ -63,25 +63,16 @@ defmodule Scaling.Pipeline do
 
   @impl true
   def handle_init(_) do
-    children = [
-      file_src: %Membrane.File.Source{location: "/tmp/input.h264"},
-      parser: Membrane.H264.FFmpeg.Parser,
-      decoder: Membrane.H264.FFmpeg.Decoder,
-      scaler: %Membrane.FFmpeg.SWScale.Scaler{output_width: 640, output_height: 640},
-      encoder: Membrane.H264.FFmpeg.Encoder,
-      file_sink: %Membrane.File.Sink{location: "/tmp/output.h264"}
+    structure = [
+      child(:file_src, %Membrane.File.Source{location: "/tmp/input.h264"})
+      |> child(:parser, Membrane.H264.FFmpeg.Parser)
+      |> child(:decoder, Membrane.H264.FFmpeg.Decoder)
+      |> child(:scaler, %Membrane.FFmpeg.SWScale.Scaler{output_width: 640, output_height: 640})
+      |> child(:encoder, Membrane.H264.FFmpeg.Encoder)
+      |> child(:file_sink, %Membrane.File.Sink{location: "/tmp/output.h264"})
     ]
 
-    links = [
-      link(:file_src)
-      |> to(:parser)
-      |> to(:decoder)
-      |> to(:scaler)
-      |> to(:encoder)
-      |> to(:file_sink)
-    ]
-
-    {{:ok, spec: %ParentSpec{children: children, links: links}}, %{}}
+    {[spec: structure}, %{}}
   end
 end
 ```
@@ -98,25 +89,16 @@ defmodule Converting.Pipeline do
 
   @impl true
   def handle_init(_) do
-    children = [
-      file_src: %Membrane.File.Source{location: "/tmp/input.h264"},
-      parser: Membrane.H264.FFmpeg.Parser,
-      decoder: Membrane.H264.FFmpeg.Decoder,
-      converter: %Membrane.FFmpeg.SWScale.PixelFormatConverter{format: :I422},
-      encoder: Membrane.H264.FFmpeg.Encoder,
-      file_sink: %Membrane.File.Sink{location: "/tmp/output.h264"}
+    structure = [
+      child(:file_src, %Membrane.File.Source{location: "/tmp/input.h264"})
+      |> child(:parser, Membrane.H264.FFmpeg.Parser)
+      |> child(:decoder, Membrane.H264.FFmpeg.Decoder)
+      |> child(:converter, %Membrane.FFmpeg.SWScale.PixelFormatConverter{format: :I422})
+      |> child(:encoder, Membrane.H264.FFmpeg.Encoder)
+      |> child(:file_sink, %Membrane.File.Sink{location: "/tmp/output.h264"})
     ]
-
-    links = [
-      link(:file_src)
-      |> to(:parser)
-      |> to(:decoder)
-      |> to(:converter)
-      |> to(:encoder)
-      |> to(:file_sink)
-    ]
-
-    {{:ok, spec: %ParentSpec{children: children, links: links}}, %{}}
+    
+    {[spec: structure], %{}}
   end
 end
 ```
