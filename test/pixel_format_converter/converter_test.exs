@@ -64,7 +64,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
       )
 
     assert_pipeline_play(pipeline)
-    assert_end_of_stream(pipeline, :sink, :input, 10_000)
+    assert_end_of_stream(pipeline, :sink)
 
     Pipeline.terminate(pipeline, blocking: true)
 
