@@ -24,15 +24,15 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
   alias Membrane.{Buffer, RawVideo}
 
   def_options output_width: [
-                type: :int,
+                spec: non_neg_integer(),
                 description: "Width of the scaled video."
               ],
               output_height: [
-                type: :int,
+                spec: non_neg_integer(),
                 description: "Height of the scaled video."
               ],
               use_shm?: [
-                type: :boolean,
+                spec: boolean(),
                 description:
                   "If true, native scaler will use shared memory (via `t:Shmex.t/0`) for storing frames",
                 default: false
