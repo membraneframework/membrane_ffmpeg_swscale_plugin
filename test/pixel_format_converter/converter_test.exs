@@ -9,7 +9,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
   alias Membrane.Testing.Pipeline
 
   test "PixelFormatConverter can convert a single frame from RGB to I420" do
-    input_caps = %RawVideo{
+    input_stream_format = %RawVideo{
       framerate: {30, 1},
       aligned: true,
       width: 6,
@@ -17,7 +17,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
       pixel_format: :RGB
     }
 
-    pixels_count = input_caps.width * input_caps.height
+    pixels_count = input_stream_format.width * input_stream_format.height
 
     rgb_input = <<0::8, 0::8, 0::8>> |> String.duplicate(pixels_count)
 
@@ -35,7 +35,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
              PixelFormatConverter.handle_init(nil, %PixelFormatConverter{format: :I420})
 
     assert {[stream_format: {:output, %RawVideo{pixel_format: :I420}}], state} =
-             PixelFormatConverter.handle_stream_format(:input, input_caps, nil, state)
+             PixelFormatConverter.handle_stream_format(:input, input_stream_format, nil, state)
 
     assert {[buffer: {:output, %Buffer{payload: output}}], _state} =
              PixelFormatConverter.handle_process(:input, %Buffer{payload: rgb_input}, nil, state)
