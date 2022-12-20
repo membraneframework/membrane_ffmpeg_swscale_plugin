@@ -62,7 +62,7 @@ defmodule Scaling.Pipeline do
   use Membrane.Pipeline
 
   @impl true
-  def handle_init(_) do
+  def handle_init(_ctx, _options) do
     structure = [
       child(:file_src, %Membrane.File.Source{location: "/tmp/input.h264"})
       |> child(:parser, Membrane.H264.FFmpeg.Parser)
@@ -88,7 +88,7 @@ defmodule Converting.Pipeline do
   use Membrane.Pipeline
 
   @impl true
-  def handle_init(_) do
+  def handle_init(_ctx, _options) do
     structure = [
       child(:file_src, %Membrane.File.Source{location: "/tmp/input.h264"})
       |> child(:parser, Membrane.H264.FFmpeg.Parser)

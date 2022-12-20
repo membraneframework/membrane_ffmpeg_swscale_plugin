@@ -66,11 +66,6 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
   end
 
   @impl true
-  def handle_process(:input, %Buffer{} = _buffer, _ctx, %{native: nil} = _state) do
-    raise "A Buffer was received before any stream format arrived. Cannot proceed"
-  end
-
-  @impl true
   def handle_process(:input, buffer, _ctx, state) do
     with {:ok, payload} <- Native.process(state.native, buffer.payload) do
       buffer = %Buffer{buffer | payload: payload}

@@ -57,11 +57,6 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
     {[], state}
   end
 
-  @impl true
-  def handle_process(:input, _buffer, _context, %{native_state: nil} = _state) do
-    raise "uninitialized state: Scaler did not receive stream format"
-  end
-
   def handle_process(
         :input,
         %Buffer{payload: payload} = buffer,
@@ -94,10 +89,5 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
       {:error, reason} ->
         raise inspect(reason)
     end
-  end
-
-  @impl true
-  def handle_end_of_stream(:input, _context, state) do
-    {[end_of_stream: :output], state}
   end
 end
