@@ -57,6 +57,7 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
     {[], state}
   end
 
+  @impl true
   def handle_process(
         :input,
         %Buffer{payload: payload} = buffer,
