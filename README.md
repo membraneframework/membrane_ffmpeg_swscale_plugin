@@ -13,7 +13,7 @@ It is a part of [Membrane Multimedia Framework](https://membrane.stream).
 Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 ```elixir
-	{:membrane_ffmpeg_swscale_plugin, "~> 0.10.0"}
+	{:membrane_ffmpeg_swscale_plugin, "~> 0.11.0"}
 ```
 
 You also need to have [FFmpeg](https://www.ffmpeg.org/) library with development headers installed on your system.
@@ -25,10 +25,10 @@ PixelFormatConverter accepts raw video in any of the pixel formats specified in 
 as input and is capable of producing output in any of these pixel formats.
 
 When creating the element you need to specify a single option `format` defining the desired pixel format of the output.
-The element requires `Membrane.RawVideo` caps on the input with `aligned: true` constraint, meaning that each buffer must contain exactly one raw video frame.
+The element requires `Membrane.RawVideo` stream format on the input with `aligned: true` constraint, meaning that each buffer must contain exactly one raw video frame.
 
 ### Scaler
-Scaler needs input in the YUV420p format, processes one frame at a time and requires getting caps with input video
+Scaler needs input in the YUV420p format, processes one frame at a time and requires getting stream format with input video
 width and height. To meet all requirements either `Membrane.RawVideo.Parser` or some decoder
 (e.g. `Membrane.H264.FFmpeg.Decoder`) have to precede Scaler in the pipeline.
 
@@ -62,26 +62,17 @@ defmodule Scaling.Pipeline do
   use Membrane.Pipeline
 
   @impl true
-  def handle_init(_) do
-    children = [
-      file_src: %Membrane.File.Source{location: "/tmp/input.h264"},
-      parser: Membrane.H264.FFmpeg.Parser,
-      decoder: Membrane.H264.FFmpeg.Decoder,
-      scaler: %Membrane.FFmpeg.SWScale.Scaler{output_width: 640, output_height: 640},
-      encoder: Membrane.H264.FFmpeg.Encoder,
-      file_sink: %Membrane.File.Sink{location: "/tmp/output.h264"}
+  def handle_init(_ctx, _options) do
+    structure = [
+      child(:file_src, %Membrane.File.Source{location: "/tmp/input.h264"})
+      |> child(:parser, Membrane.H264.FFmpeg.Parser)
+      |> child(:decoder, Membrane.H264.FFmpeg.Decoder)
+      |> child(:scaler, %Membrane.FFmpeg.SWScale.Scaler{output_width: 640, output_height: 640})
+      |> child(:encoder, Membrane.H264.FFmpeg.Encoder)
+      |> child(:file_sink, %Membrane.File.Sink{location: "/tmp/output.h264"})
     ]
 
-    links = [
-      link(:file_src)
-      |> to(:parser)
-      |> to(:decoder)
-      |> to(:scaler)
-      |> to(:encoder)
-      |> to(:file_sink)
-    ]
-
-    {{:ok, spec: %ParentSpec{children: children, links: links}}, %{}}
+    {[spec: structure}, %{}}
   end
 end
 ```
@@ -97,26 +88,17 @@ defmodule Converting.Pipeline do
   use Membrane.Pipeline
 
   @impl true
-  def handle_init(_) do
-    children = [
-      file_src: %Membrane.File.Source{location: "/tmp/input.h264"},
-      parser: Membrane.H264.FFmpeg.Parser,
-      decoder: Membrane.H264.FFmpeg.Decoder,
-      converter: %Membrane.FFmpeg.SWScale.PixelFormatConverter{format: :I422},
-      encoder: Membrane.H264.FFmpeg.Encoder,
-      file_sink: %Membrane.File.Sink{location: "/tmp/output.h264"}
+  def handle_init(_ctx, _options) do
+    structure = [
+      child(:file_src, %Membrane.File.Source{location: "/tmp/input.h264"})
+      |> child(:parser, Membrane.H264.FFmpeg.Parser)
+      |> child(:decoder, Membrane.H264.FFmpeg.Decoder)
+      |> child(:converter, %Membrane.FFmpeg.SWScale.PixelFormatConverter{format: :I422})
+      |> child(:encoder, Membrane.H264.FFmpeg.Encoder)
+      |> child(:file_sink, %Membrane.File.Sink{location: "/tmp/output.h264"})
     ]
-
-    links = [
-      link(:file_src)
-      |> to(:parser)
-      |> to(:decoder)
-      |> to(:converter)
-      |> to(:encoder)
-      |> to(:file_sink)
-    ]
-
-    {{:ok, spec: %ParentSpec{children: children, links: links}}, %{}}
+    
+    {[spec: structure], %{}}
   end
 end
 ```

@@ -1,6 +1,7 @@
 defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
   use ExUnit.Case
 
+  import Membrane.ChildrenSpec
   import Membrane.Testing.Assertions
 
   alias Membrane.{Buffer, RawVideo}
@@ -8,7 +9,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
   alias Membrane.Testing.Pipeline
 
   test "PixelFormatConverter can convert a single frame from RGB to I420" do
-    input_caps = %RawVideo{
+    input_stream_format = %RawVideo{
       framerate: {30, 1},
       aligned: true,
       width: 6,
@@ -16,7 +17,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
       pixel_format: :RGB
     }
 
-    pixels_count = input_caps.width * input_caps.height
+    pixels_count = input_stream_format.width * input_stream_format.height
 
     rgb_input = <<0::8, 0::8, 0::8>> |> String.duplicate(pixels_count)
 
@@ -30,12 +31,13 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
       ]
       |> Enum.join()
 
-    assert {:ok, state} = PixelFormatConverter.handle_init(%PixelFormatConverter{format: :I420})
+    assert {[], state} =
+             PixelFormatConverter.handle_init(nil, %PixelFormatConverter{format: :I420})
 
-    assert {{:ok, caps: {:output, %RawVideo{pixel_format: :I420}}}, state} =
-             PixelFormatConverter.handle_caps(:input, input_caps, nil, state)
+    assert {[stream_format: {:output, %RawVideo{pixel_format: :I420}}], state} =
+             PixelFormatConverter.handle_stream_format(:input, input_stream_format, nil, state)
 
-    assert {{:ok, buffer: {:output, %Buffer{payload: output}}}, _state} =
+    assert {[buffer: {:output, %Buffer{payload: output}}], _state} =
              PixelFormatConverter.handle_process(:input, %Buffer{payload: rgb_input}, nil, state)
 
     assert bit_size(output) == pixels_count * 12
@@ -48,23 +50,22 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
     reference_path = "../fixtures/output-rgb-10-400x400.raw" |> Path.expand(__DIR__)
     input_path = "../fixtures/input-10-400x400.raw" |> Path.expand(__DIR__)
 
-    opts = %Pipeline.Options{
-      elements: [
-        source: %Membrane.File.Source{location: input_path},
-        parser: %Membrane.RawVideo.Parser{
-          pixel_format: :I420,
-          width: 400,
-          height: 400
-        },
-        converter: %PixelFormatConverter{format: :RGB},
-        sink: %Membrane.File.Sink{location: output_path}
-      ]
-    }
+    pipeline =
+      Pipeline.start_link_supervised!(
+        structure:
+          child(:source, %Membrane.File.Source{location: input_path})
+          |> child(:parser, %Membrane.RawVideo.Parser{
+            pixel_format: :I420,
+            width: 400,
+            height: 400
+          })
+          |> child(:converter, %PixelFormatConverter{format: :RGB})
+          |> child(:sink, %Membrane.File.Sink{location: output_path})
+      )
 
-    assert {:ok, pipeline} = Pipeline.start_link(opts)
-
-    assert_pipeline_playback_changed(pipeline, :prepared, :playing)
+    assert_pipeline_play(pipeline)
     assert_end_of_stream(pipeline, :sink)
+
     Pipeline.terminate(pipeline, blocking: true)
 
     assert File.exists?(output_path)
