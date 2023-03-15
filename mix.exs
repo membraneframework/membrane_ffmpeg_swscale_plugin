@@ -35,13 +35,17 @@ defmodule Membrane.FFmpeg.SWScale.Mixfile do
   defp deps do
     [
       {:membrane_core, "~> 0.11.0"},
-      {:membrane_raw_video_format, "~> 0.2.0"},
+      {:membrane_raw_video_format, "~> 0.3.0"},
       {:membrane_common_c, "~> 0.14.0"},
       {:unifex, "~> 1.0"},
       # Testing
       {:membrane_file_plugin, "~> 0.13", only: :test},
-      {:membrane_h264_ffmpeg_plugin, "~> 0.22", only: :test},
-      {:membrane_raw_video_parser_plugin, "~> 0.9", only: :test},
+      {:membrane_h264_ffmpeg_plugin,
+       github: "membraneframework/membrane_h264_ffmpeg_plugin", branch: "update_caps", only: :test},
+      {:membrane_raw_video_parser_plugin,
+       github: "membraneframework/membrane_raw_video_parser_plugin",
+       branch: "update_caps",
+       only: :test},
       {:ex_doc, "~> 0.28", only: :dev, runtime: false},
       {:dialyxir, "~> 1.1", only: :dev, runtime: false},
       {:credo, "~> 1.6", only: :dev, runtime: false}

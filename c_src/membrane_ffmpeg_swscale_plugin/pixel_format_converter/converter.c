@@ -117,6 +117,8 @@ enum AVPixelFormat string_to_AVPixelFormat(char *format) {
     return AV_PIX_FMT_NV12;
   } else if (strcmp(format, "NV21") == 0) {
     return AV_PIX_FMT_NV21;
+  } else if (strcmp(format, "YUY2") == 0) {
+    return AV_PIX_FMT_YUYV422;
   } else {
     return AV_PIX_FMT_NONE;
   }
