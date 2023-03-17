@@ -12,13 +12,14 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
   - NV12
   - NV21
   - AYUV
+  - YUY2
   """
   use Membrane.Filter
 
   alias __MODULE__.Native
   alias Membrane.{Buffer, RawVideo}
 
-  @supported_pixel_formats [:I420, :I422, :I444, :RGB, :BGRA, :RGBA, :NV12, :NV21, :AYUV]
+  @supported_pixel_formats [:I420, :I422, :I444, :RGB, :BGRA, :RGBA, :NV12, :NV21, :AYUV, :YUY2]
 
   def_input_pad :input,
     accepted_format:
