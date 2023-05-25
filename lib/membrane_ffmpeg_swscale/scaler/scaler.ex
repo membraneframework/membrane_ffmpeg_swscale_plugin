@@ -2,11 +2,14 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
   @moduledoc """
   This element performs video scaling, using SWScale module of FFmpeg library.
 
-  There are two options that have to be specified when creating Scaler:
+  There are two options that can be specified when creating Scaler:
   - `output_width` - desired scaled video width.
   - `output_height` - desired scaled video height.
 
   Both need to be even numbers.
+
+  Note that if only one dimension is specified (either `output_width` or `output_height`),
+  the other dimension is calculated on `handle_stream_format` callback based on input dimensions.
 
   Scaling consists of two operations:
   - scaling itself - resizing video frame with keeping original ratio. After that operation at least one of the dimensions of the input frame match the respective dimension of the desired output size. The second one (if does not match) is smaller than its respective dimension.
@@ -25,10 +28,12 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
 
   def_options output_width: [
                 spec: non_neg_integer(),
+                default: nil,
                 description: "Width of the scaled video."
               ],
               output_height: [
                 spec: non_neg_integer(),
+                default: nil,
                 description: "Height of the scaled video."
               ],
               use_shm?: [
@@ -80,6 +85,8 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
         _context,
         state
       ) do
+    state = calculate_output_dims(state, {width, height})
+
     case Native.create(width, height, state.output_width, state.output_height) do
       {:ok, native_state} ->
         stream_format = %{stream_format | width: state.output_width, height: state.output_height}
@@ -91,4 +98,21 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
         raise inspect(reason)
     end
   end
+
+  defp calculate_output_dims(%{output_width: nil, output_height: nil}, _original_dim),
+    do: raise("At least one dimension should be provided")
+
+  defp calculate_output_dims(%{output_width: nil} = state, {width, height}) do
+    output_width = div(state.output_height * width, height)
+    output_width = output_width + rem(output_width, 4)
+    %{state | output_width: output_width}
+  end
+
+  defp calculate_output_dims(%{output_height: nil} = state, {width, height}) do
+    output_height = div(state.output_width * height, width)
+    output_height = output_height + rem(output_height, 4)
+    %{state | output_height: output_height}
+  end
+
+  defp calculate_output_dims(state, _original_dim), do: state
 end
