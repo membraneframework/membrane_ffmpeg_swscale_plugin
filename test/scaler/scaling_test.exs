@@ -126,15 +126,12 @@ defmodule ScalerTest do
     end
 
     test "raise if neither width nor height is provided" do
-      assert {[], state} =
-               Scaler.handle_init(%{}, %Scaler{
-                 output_width: nil,
-                 output_height: nil,
-                 use_shm?: false
-               })
-
-      assert_raise RuntimeError, "At least one dimension should be provided", fn ->
-        Scaler.handle_stream_format(:input, @input_stream_format, %{}, state)
+      assert_raise RuntimeError, "At least one dimension needs to be provided", fn ->
+        Scaler.handle_init(%{}, %Scaler{
+          output_width: nil,
+          output_height: nil,
+          use_shm?: false
+        })
       end
     end
   end

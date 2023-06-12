@@ -53,6 +53,11 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
     accepted_format: %RawVideo{pixel_format: :I420, aligned: true}
 
   @impl true
+  def handle_init(_ctx, %{output_width: nil, output_height: nil}) do
+    raise "At least one dimension needs to be provided"
+  end
+
+  @impl true
   def handle_init(_ctx, options) do
     state =
       options
@@ -98,9 +103,6 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
         raise inspect(reason)
     end
   end
-
-  defp calculate_output_dims(%{output_width: nil, output_height: nil}, _original_dim),
-    do: raise("At least one dimension should be provided")
 
   defp calculate_output_dims(%{output_width: nil} = state, {width, height}) do
     output_width = div(state.output_height * width, height)
