@@ -106,13 +106,11 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
 
   defp calculate_output_dims(%{output_width: nil} = state, {width, height}) do
     output_width = div(state.output_height * width, height)
-    output_width = output_width - rem(output_width, 4)
     %{state | output_width: output_width}
   end
 
   defp calculate_output_dims(%{output_height: nil} = state, {width, height}) do
     output_height = div(state.output_width * height, width)
-    output_height = output_height - rem(output_height, 4)
     %{state | output_height: output_height}
   end
 
