@@ -66,7 +66,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
     assert_pipeline_play(pipeline)
     assert_end_of_stream(pipeline, :sink)
 
-    Pipeline.terminate(pipeline, blocking: true)
+    Pipeline.terminate(pipeline)
 
     assert File.exists?(output_path)
     assert File.read!(output_path) == File.read!(reference_path)
