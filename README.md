@@ -13,7 +13,7 @@ It is a part of [Membrane Multimedia Framework](https://membrane.stream).
 Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 ```elixir
-{:membrane_ffmpeg_swscale_plugin, "~> 0.12.0"}
+{:membrane_ffmpeg_swscale_plugin, "~> 0.13.0"}
 ```
 
 You also need to have [FFmpeg](https://www.ffmpeg.org/) library with development headers installed on your system.
