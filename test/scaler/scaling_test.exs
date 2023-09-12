@@ -4,8 +4,25 @@ defmodule ScalerTest do
   import Membrane.ChildrenSpec
   import Membrane.Testing.Assertions
 
-  alias Membrane.H264
+  alias Membrane.FFmpeg.SWScale.Scaler
+  alias Membrane.{H264, RawVideo}
   alias Membrane.Testing.Pipeline
+
+  @input_stream_format %RawVideo{
+    width: 1920,
+    height: 1080,
+    aligned: true,
+    pixel_format: :I420,
+    framerate: nil
+  }
+
+  @output_stream_format %RawVideo{
+    width: 640,
+    height: 360,
+    aligned: true,
+    pixel_format: :I420,
+    framerate: nil
+  }
 
   defp prepare_paths(file_name, format) do
     input_path = "../fixtures/input-#{file_name}.#{format}" |> Path.expand(__DIR__)
@@ -68,6 +85,54 @@ defmodule ScalerTest do
         )
 
       perform_test(output_path, pipeline)
+    end
+  end
+
+  describe "output dimensions should" do
+    test "be calculated if only width is provided" do
+      assert {[], state} =
+               Scaler.handle_init(%{}, %Scaler{
+                 output_width: 640,
+                 output_height: nil,
+                 use_shm?: false
+               })
+
+      assert {[stream_format: {:output, @output_stream_format}],
+              %{output_width: 640, output_height: 360}} =
+               Scaler.handle_stream_format(
+                 :input,
+                 @input_stream_format,
+                 %{},
+                 state
+               )
+    end
+
+    test "be calculated if only height is provided" do
+      assert {[], state} =
+               Scaler.handle_init(%{}, %Scaler{
+                 output_width: nil,
+                 output_height: 360,
+                 use_shm?: false
+               })
+
+      assert {[stream_format: {:output, @output_stream_format}],
+              %{output_width: 640, output_height: 360}} =
+               Scaler.handle_stream_format(
+                 :input,
+                 @input_stream_format,
+                 %{},
+                 state
+               )
+    end
+
+    test "raise if neither width nor height is provided" do
+      assert_raise RuntimeError, "At least one dimension needs to be provided", fn ->
+        Scaler.handle_init(%{}, %Scaler{
+          output_width: nil,
+          output_height: nil,
+          use_shm?: false
+        })
+      end
     end
   end
 end
