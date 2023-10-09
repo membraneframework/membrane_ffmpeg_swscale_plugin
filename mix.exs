@@ -1,7 +1,7 @@
 defmodule Membrane.FFmpeg.SWScale.Mixfile do
   use Mix.Project
 
-  @version "0.13.0"
+  @version "0.14.0"
   @github_url "https://github.com/membraneframework/membrane_ffmpeg_swscale_plugin"
 
   def project do
@@ -37,7 +37,7 @@ defmodule Membrane.FFmpeg.SWScale.Mixfile do
       {:membrane_core, "~> 0.12.8"},
       {:membrane_raw_video_format, "~> 0.3.0"},
       {:membrane_common_c, "~> 0.15.0"},
-      {:unifex, "~> 1.0"},
+      {:bundlex, "~> 1.2"},
       # Testing
       {:membrane_file_plugin, "~> 0.13", only: :test},
       {:membrane_h264_ffmpeg_plugin, "~> 0.27.0", only: :test},
