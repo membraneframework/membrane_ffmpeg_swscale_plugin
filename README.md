@@ -13,10 +13,30 @@ It is a part of [Membrane Multimedia Framework](https://membrane.stream).
 Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 ```elixir
-{:membrane_ffmpeg_swscale_plugin, "~> 0.13.0"}
+{:membrane_ffmpeg_swscale_plugin, "~> 0.14.0"}
 ```
 
-You also need to have [FFmpeg](https://www.ffmpeg.org/) library with development headers installed on your system.
+The precompiled builds of the [ffmpeg](https://www.ffmpeg.org) will be pulled and linked automatically. However, should there be any problems, consider installing it manually.
+
+### Manual instalation of dependencies
+
+#### macOS
+
+```shell
+brew install ffmpeg
+```
+
+#### Ubuntu
+
+```shell
+sudo apt-get install ffmpeg
+```
+
+#### Arch / Manjaro
+
+```shell
+pacman -S ffmpeg
+```
 
 ## Description
 
