@@ -13,7 +13,7 @@ It is a part of [Membrane Multimedia Framework](https://membrane.stream).
 Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 ```elixir
-	{:membrane_ffmpeg_swscale_plugin, "~> 0.15.0"}
+{:membrane_ffmpeg_swscale_plugin, "~> 0.15.0"}
 ```
 
 The precompiled builds of the [ffmpeg](https://www.ffmpeg.org) will be pulled and linked automatically. However, should there be any problems, consider installing it manually.
@@ -85,7 +85,7 @@ defmodule Scaling.Pipeline do
   def handle_init(_ctx, _options) do
     structure = [
       child(:file_src, %Membrane.File.Source{location: "/tmp/input.h264"})
-      |> child(:parser, Membrane.H264.FFmpeg.Parser)
+      |> child(:parser, Membrane.H264.Parser)
       |> child(:decoder, Membrane.H264.FFmpeg.Decoder)
       |> child(:scaler, %Membrane.FFmpeg.SWScale.Scaler{output_width: 640, output_height: 640})
       |> child(:encoder, Membrane.H264.FFmpeg.Encoder)
@@ -111,7 +111,7 @@ defmodule Converting.Pipeline do
   def handle_init(_ctx, _options) do
     structure = [
       child(:file_src, %Membrane.File.Source{location: "/tmp/input.h264"})
-      |> child(:parser, Membrane.H264.FFmpeg.Parser)
+      |> child(:parser, Membrane.H264.Parser)
       |> child(:decoder, Membrane.H264.FFmpeg.Decoder)
       |> child(:converter, %Membrane.FFmpeg.SWScale.PixelFormatConverter{format: :I422})
       |> child(:encoder, Membrane.H264.FFmpeg.Encoder)

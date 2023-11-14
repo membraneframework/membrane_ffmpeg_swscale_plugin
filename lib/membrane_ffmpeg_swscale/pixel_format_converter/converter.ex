@@ -24,17 +24,12 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
   def_input_pad :input,
     accepted_format:
       %RawVideo{aligned: true, pixel_format: pixel_format}
-      when pixel_format in @supported_pixel_formats,
-    availability: :always,
-    demand_unit: :buffers,
-    demand_mode: :auto
+      when pixel_format in @supported_pixel_formats
 
   def_output_pad :output,
     accepted_format:
       %RawVideo{aligned: true, pixel_format: pixel_format}
-      when pixel_format in @supported_pixel_formats,
-    availability: :always,
-    demand_mode: :auto
+      when pixel_format in @supported_pixel_formats
 
   def_options format: [
                 spec: RawVideo.pixel_format_t(),
@@ -67,7 +62,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
   end
 
   @impl true
-  def handle_process(:input, buffer, _ctx, state) do
+  def handle_buffer(:input, buffer, _ctx, state) do
     with {:ok, payload} <- Native.process(state.native, buffer.payload) do
       buffer = %Buffer{buffer | payload: payload}
       {[buffer: {:output, buffer}], state}
