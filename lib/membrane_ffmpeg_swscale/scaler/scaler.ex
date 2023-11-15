@@ -44,12 +44,9 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
               ]
 
   def_input_pad :input,
-    demand_unit: :buffers,
-    demand_mode: :auto,
     accepted_format: %RawVideo{pixel_format: :I420, aligned: true}
 
   def_output_pad :output,
-    demand_mode: :auto,
     accepted_format: %RawVideo{pixel_format: :I420, aligned: true}
 
   @impl true
@@ -68,7 +65,7 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
   end
 
   @impl true
-  def handle_process(
+  def handle_buffer(
         :input,
         %Buffer{payload: payload} = buffer,
         _context,

@@ -48,7 +48,7 @@ defmodule ScalerTest do
 
       pipeline =
         Pipeline.start_link_supervised!(
-          structure:
+          spec:
             child(:file_src, %Membrane.File.Source{location: input_path})
             |> child(
               :parser,
@@ -73,9 +73,9 @@ defmodule ScalerTest do
 
       pipeline =
         Pipeline.start_link_supervised!(
-          structure:
+          spec:
             child(:file_src, %Membrane.File.Source{location: input_path})
-            |> child(:parser, H264.FFmpeg.Parser)
+            |> child(:parser, H264.Parser)
             |> child(:decoder, H264.FFmpeg.Decoder)
             |> child(:scaler, %Membrane.FFmpeg.SWScale.Scaler{
               output_width: 400,

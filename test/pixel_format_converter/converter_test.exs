@@ -38,7 +38,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
              PixelFormatConverter.handle_stream_format(:input, input_stream_format, nil, state)
 
     assert {[buffer: {:output, %Buffer{payload: output}}], _state} =
-             PixelFormatConverter.handle_process(:input, %Buffer{payload: rgb_input}, nil, state)
+             PixelFormatConverter.handle_buffer(:input, %Buffer{payload: rgb_input}, nil, state)
 
     assert bit_size(output) == pixels_count * 12
     assert output == i420_output
@@ -52,7 +52,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
 
     pipeline =
       Pipeline.start_link_supervised!(
-        structure:
+        spec:
           child(:source, %Membrane.File.Source{location: input_path})
           |> child(:parser, %Membrane.RawVideo.Parser{
             pixel_format: :I420,
@@ -63,7 +63,6 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter.Test do
           |> child(:sink, %Membrane.File.Sink{location: output_path})
       )
 
-    assert_pipeline_play(pipeline)
     assert_end_of_stream(pipeline, :sink)
 
     Pipeline.terminate(pipeline)
