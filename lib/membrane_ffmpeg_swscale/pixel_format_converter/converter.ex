@@ -21,9 +21,6 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
 
   @supported_pixel_formats [:I420, :I422, :I444, :RGB, :BGRA, :RGBA, :NV12, :NV21, :AYUV, :YUY2]
 
-  @spec supported_pixel_formats() :: [RawVideo.pixel_format_t()]
-  def supported_pixel_formats(), do: @supported_pixel_formats
-
   def_input_pad :input,
     accepted_format:
       %RawVideo{aligned: true, pixel_format: pixel_format}
@@ -36,7 +33,6 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
 
   def_options format: [
                 spec: RawVideo.pixel_format_t(),
-                required?: true,
                 description: """
                 Desired pixel format of output video.
                 """
@@ -63,12 +59,6 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
       {:error, reason} ->
         raise "Scaler nif context initialization failed. Reason: `#{inspect(reason)}`"
     end
-  end
-
-  @impl true
-  def handle_buffer(:input, buffer, ctx, state)
-      when ctx.pads.input.stream_format.pixel_format == state.format do
-    {[buffer: {:output, buffer}], state}
   end
 
   @impl true
