@@ -124,15 +124,5 @@ defmodule SWScalerTest do
                  state
                )
     end
-
-    test "raise if neither width nor height is provided" do
-      assert_raise RuntimeError, "At least one dimension needs to be provided", fn ->
-        SWScaler.handle_init(%{}, %SWScaler{
-          output_width: nil,
-          output_height: nil,
-          use_shm?: false
-        })
-      end
-    end
   end
 end

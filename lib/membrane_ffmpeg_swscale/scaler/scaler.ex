@@ -6,9 +6,12 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
   """
 
   use Membrane.Filter
+
+  require Membrane.Logger
+
   alias __MODULE__.Native
   alias Membrane.{Buffer, RawVideo}
-  require Membrane.Logger
+
   def_options output_width: [
                 spec: non_neg_integer(),
                 default: nil,

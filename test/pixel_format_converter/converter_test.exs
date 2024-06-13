@@ -37,8 +37,10 @@ defmodule Membrane.FFmpeg.SWScale.SWScaler.Test do
     assert {[stream_format: {:output, %RawVideo{pixel_format: :I420}}], state} =
              SWScaler.handle_stream_format(:input, input_stream_format, nil, state)
 
+    handle_buffer_ctx = %{pads: %{input: %{stream_format: %{pixel_format: :RGB}}}}
+
     assert {[buffer: {:output, %Buffer{payload: output}}], _state} =
-             SWScaler.handle_buffer(:input, %Buffer{payload: rgb_input}, nil, state)
+             SWScaler.handle_buffer(:input, %Buffer{payload: rgb_input}, handle_buffer_ctx, state)
 
     assert bit_size(output) == pixels_count * 12
     assert output == i420_output

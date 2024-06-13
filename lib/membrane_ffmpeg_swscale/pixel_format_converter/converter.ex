@@ -6,10 +6,10 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
   """
   use Membrane.Filter
 
+  require Membrane.Logger
+
   alias __MODULE__.Native
   alias Membrane.{Buffer, RawVideo}
-
-  require Membrane.Logger
 
   @supported_pixel_formats [:I420, :I422, :I444, :RGB, :BGRA, :RGBA, :NV12, :NV21, :AYUV, :YUY2]
 

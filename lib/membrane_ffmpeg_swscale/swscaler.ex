@@ -34,6 +34,9 @@ defmodule Membrane.FFmpeg.SWScaler do
   """
 
   use Membrane.Filter
+
+  require Membrane.Logger
+
   alias Membrane.FFmpeg.SWScale.PixelFormatConverter, as: Converter
   alias Membrane.FFmpeg.SWScale.Scaler
   alias Membrane.RawVideo
@@ -62,9 +65,9 @@ defmodule Membrane.FFmpeg.SWScaler do
               ],
               use_shm?: [
                 spec: boolean(),
+                default: false,
                 description:
-                  "If true, native scaler will use shared memory (via `t:Shmex.t/0`) for storing frames",
-                default: false
+                  "If true, native scaler will use shared memory (via `t:Shmex.t/0`) for storing frames"
               ],
               format: [
                 spec: RawVideo.pixel_format_t() | nil,
@@ -76,14 +79,20 @@ defmodule Membrane.FFmpeg.SWScaler do
 
   @impl true
   def handle_init(_ctx, options) do
+    with %__MODULE__{output_width: nil, output_height: nil, format: nil} <- options do
+      Membrane.Logger.warning("""
+      Neither :output_width, :output_height nor :format was specyfied, so this filter won't do any operation on buffers.
+      """)
+    end
+
     scale? = options.output_width != nil or options.output_height != nil
 
     state =
       Map.from_struct(options)
       |> Map.merge(%{
         scaler: nil,
-        input_conventer: nil,
-        output_conventer: nil,
+        input_converter: nil,
+        output_converter: nil,
         scale?: scale?
       })
 
@@ -95,6 +104,32 @@ defmodule Membrane.FFmpeg.SWScaler do
     do: do_handle_stream_format(stream_format, state)
 
   defp do_handle_stream_format(stream_format, state) when state.scale? do
+    state =
+      case state do
+        %{output_width: nil} ->
+          output_width =
+            caluculate_missing_dimension(
+              state.output_height,
+              stream_format.width,
+              stream_format.height
+            )
+
+          %{state | output_width: output_width}
+
+        %{output_height: nil} ->
+          output_height =
+            caluculate_missing_dimension(
+              state.output_width,
+              stream_format.height,
+              stream_format.width
+            )
+
+          %{state | output_height: output_height}
+
+        state ->
+          state
+      end
+
     output_pixel_format = state.format || stream_format.pixel_format
 
     state =
@@ -135,7 +170,7 @@ defmodule Membrane.FFmpeg.SWScaler do
         pixel_format: output_pixel_format
     }
 
-    {[stream_format: stream_format], state}
+    {[stream_format: {:output, stream_format}], state}
   end
 
   defp do_handle_stream_format(stream_format, state) when not state.scale? do
@@ -154,7 +189,7 @@ defmodule Membrane.FFmpeg.SWScaler do
         error -> raise "Error while creating native: #{inspect(error)}"
       end
 
-    stream_format = %{stream_format | pixel_format: state.format}
+    stream_format = %{stream_format | pixel_format: output_pixel_format}
     {[stream_format: {:output, stream_format}], state}
   end
 
@@ -179,7 +214,7 @@ defmodule Membrane.FFmpeg.SWScaler do
   end
 
   defp scale(payload, native_scaler, use_shm?) do
-    with {:ok, payload} <- Scaler.Native.scale(native_scaler, use_shm?, payload) do
+    with {:ok, payload} <- Scaler.Native.scale(payload, use_shm?, native_scaler) do
       payload
     else
       {:error, reason} ->
@@ -198,5 +233,10 @@ defmodule Membrane.FFmpeg.SWScaler do
       {:error, reason} ->
         raise "An error has ocurred while processing the buffer: `#{inspect(reason)}`"
     end
+  end
+
+  defp caluculate_missing_dimension(present_dim, analogical_input_dim, opposite_input_dim) do
+    output_dim = div(present_dim * analogical_input_dim, opposite_input_dim)
+    output_dim + rem(output_dim, 2)
   end
 end
