@@ -1,31 +1,14 @@
 defmodule Membrane.FFmpeg.SWScale.Scaler do
   @moduledoc """
-  This element performs video scaling, using SWScale module of FFmpeg library.
+  This module is deprecated. Use Membrane.FFmpeg.SWScaler instead.
 
-  There are two options that can be specified when creating Scaler:
-  - `output_width` - desired scaled video width.
-  - `output_height` - desired scaled video height.
-
-  Both need to be even numbers.
-
-  Note that if only one dimension is specified (either `output_width` or `output_height`),
-  the other dimension is calculated on `handle_stream_format` callback based on input dimensions.
-
-  Scaling consists of two operations:
-  - scaling itself - resizing video frame with keeping original ratio. After that operation at least one of the dimensions of the input frame match the respective dimension of the desired output size. The second one (if does not match) is smaller than its respective dimension.
-  - adding paddings - if one dimension does not match after scaling, paddings have to be added. They are put on both sides of the scaled frame equally. They are either above and below the frame or on the left and right sides of it. It depends on the dimension that did not match after scaling.
-
-  Scaler needs input in the YUV420p format, processes one frame at a time and requires getting stream format with input video
-  width and height. To meet all requirements either `Membrane.Element.RawVideo.Parser` or some decoder
-  (e.g. `Membrane.H264.FFmpeg.Decoder`) have to precede Scaler in the pipeline.
-
-  The output of the element is also in the YUV420p format. It has the size as specified in the options. All
-  stream format except for width and height are passed unchanged to the next element in the pipeline.
+  All options supported by #{inspect(__MODULE__)} are supported by Membrane.FFmpeg.SWScaler.
   """
+
   use Membrane.Filter
   alias __MODULE__.Native
   alias Membrane.{Buffer, RawVideo}
-
+  require Membrane.Logger
   def_options output_width: [
                 spec: non_neg_integer(),
                 default: nil,
@@ -56,6 +39,11 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
 
   @impl true
   def handle_init(_ctx, options) do
+    Membrane.Logger.warning("""
+    Filter #{inspect(__MODULE__)} is deprecated. Use Membrane.FFmpeg.SWScaler instead. \
+    All options supported by #{inspect(__MODULE__)} are supported by Membrane.FFmpeg.SWScaler.
+    """)
+
     state =
       options
       |> Map.from_struct()
