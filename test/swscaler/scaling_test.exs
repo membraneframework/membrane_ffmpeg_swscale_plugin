@@ -1,4 +1,4 @@
-defmodule SWScalerTest do
+defmodule Membrane.FFmpeg.SWScaler.ScalingTest do
   use ExUnit.Case
 
   import Membrane.ChildrenSpec
