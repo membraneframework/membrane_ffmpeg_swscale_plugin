@@ -1,8 +1,8 @@
 defmodule Membrane.FFmpeg.SWScale.Scaler do
   @moduledoc """
-  This module is deprecated. Use Membrane.FFmpeg.SWScaler instead.
+  This module is deprecated. Use Membrane.FFmpeg.SWScale.Converter instead.
 
-  All options supported by #{inspect(__MODULE__)} are supported by Membrane.FFmpeg.SWScaler.
+  All options supported by #{inspect(__MODULE__)} are supported by Membrane.FFmpeg.SWScale.Converter.
   """
 
   use Membrane.Filter
@@ -43,8 +43,8 @@ defmodule Membrane.FFmpeg.SWScale.Scaler do
   @impl true
   def handle_init(_ctx, options) do
     Membrane.Logger.warning("""
-    Filter #{inspect(__MODULE__)} is deprecated. Use Membrane.FFmpeg.SWScaler instead. \
-    All options supported by #{inspect(__MODULE__)} are supported by Membrane.FFmpeg.SWScaler.
+    Filter #{inspect(__MODULE__)} is deprecated. Use Membrane.FFmpeg.SWScale.Converter instead. \
+    All options supported by #{inspect(__MODULE__)} are supported by Membrane.FFmpeg.SWScale.Converter.
     """)
 
     state =

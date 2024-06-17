@@ -1,14 +1,14 @@
-defmodule Membrane.FFmpeg.SWScaler.ConvertingTest do
+defmodule Membrane.FFmpeg.SWScale.Converter.PixelFormatConvertingTest do
   use ExUnit.Case
 
   import Membrane.ChildrenSpec
   import Membrane.Testing.Assertions
 
   alias Membrane.{Buffer, RawVideo}
-  alias Membrane.FFmpeg.SWScaler
+  alias Membrane.FFmpeg.SWScale
   alias Membrane.Testing.Pipeline
 
-  test "SWScaler can convert a single frame from RGB to I420" do
+  test "SWScale.Converter can convert a single frame from RGB to I420" do
     input_stream_format = %RawVideo{
       framerate: {30, 1},
       aligned: true,
@@ -32,15 +32,15 @@ defmodule Membrane.FFmpeg.SWScaler.ConvertingTest do
       |> Enum.join()
 
     assert {[], state} =
-             SWScaler.handle_init(nil, %SWScaler{format: :I420})
+             SWScale.Converter.handle_init(nil, %SWScale.Converter{format: :I420})
 
     assert {[stream_format: {:output, %RawVideo{pixel_format: :I420}}], state} =
-             SWScaler.handle_stream_format(:input, input_stream_format, nil, state)
+             SWScale.Converter.handle_stream_format(:input, input_stream_format, nil, state)
 
     handle_buffer_ctx = %{pads: %{input: %{stream_format: %{pixel_format: :RGB}}}}
 
     assert {[buffer: {:output, %Buffer{payload: output}}], _state} =
-             SWScaler.handle_buffer(:input, %Buffer{payload: rgb_input}, handle_buffer_ctx, state)
+             SWScale.Converter.handle_buffer(:input, %Buffer{payload: rgb_input}, handle_buffer_ctx, state)
 
     assert bit_size(output) == pixels_count * 12
     assert output == i420_output
@@ -61,7 +61,7 @@ defmodule Membrane.FFmpeg.SWScaler.ConvertingTest do
             width: 400,
             height: 400
           })
-          |> child(:converter, %SWScaler{format: :RGB})
+          |> child(:converter, %SWScale.Converter{format: :RGB})
           |> child(:sink, %Membrane.File.Sink{location: output_path})
       )
 

@@ -1,4 +1,4 @@
-defmodule Membrane.FFmpeg.SWScaler do
+defmodule Membrane.FFmpeg.SWScale.Converter do
   @moduledoc """
   This element performs video scaling and conversion between pixel formats of raw video, using SWScale module of FFmpeg library.
 
@@ -30,18 +30,18 @@ defmodule Membrane.FFmpeg.SWScaler do
   - scaling itself - resizing video frame with keeping original ratio. After that operation at least one of the dimensions of the input frame match the respective dimension of the desired output size. The second one (if does not match) is smaller than its respective dimension.
   - adding paddings - if one dimension does not match after scaling, paddings have to be added. They are put on both sides of the scaled frame equally. They are either above and below the frame or on the left and right sides of it. It depends on the dimension that did not match after scaling.
 
-  SWScaler requires getting stream format with input video width and height. To meet all requirements either `Membrane.Element.RawVideo.Parser` or some decoder (e.g. `Membrane.H264.FFmpeg.Decoder`) have to precede SWScaler in the pipeline.
+  #{inspect(__MODULE__)} requires getting stream format with input video width and height. To meet all requirements either `Membrane.Element.RawVideo.Parser` or some decoder (e.g. `Membrane.H264.FFmpeg.Decoder`) have to precede #{inspect(__MODULE__)} in the pipeline.
   """
 
   use Membrane.Filter
 
   require Membrane.Logger
 
-  alias Membrane.FFmpeg.SWScale.PixelFormatConverter, as: Converter
+  alias Membrane.FFmpeg.SWScale.PixelFormatConverter
   alias Membrane.FFmpeg.SWScale.Scaler
   alias Membrane.RawVideo
 
-  @supported_pixel_formats Converter.supported_pixel_formats()
+  @supported_pixel_formats PixelFormatConverter.supported_pixel_formats()
 
   def_input_pad :input,
     accepted_format:
@@ -134,7 +134,7 @@ defmodule Membrane.FFmpeg.SWScaler do
 
     state =
       with {:ok, input_converter} <-
-             Converter.Native.create(
+        PixelFormatConverter.Native.create(
                stream_format.width,
                stream_format.height,
                stream_format.pixel_format,
@@ -148,7 +148,7 @@ defmodule Membrane.FFmpeg.SWScaler do
                state.output_height
              ),
            {:ok, output_converter} <-
-             Converter.Native.create(
+            PixelFormatConverter.Native.create(
                stream_format.width,
                stream_format.height,
                :I420,
@@ -178,7 +178,7 @@ defmodule Membrane.FFmpeg.SWScaler do
 
     state =
       with {:ok, output_converter} <-
-             Converter.Native.create(
+        PixelFormatConverter.Native.create(
                stream_format.width,
                stream_format.height,
                stream_format.pixel_format,
@@ -227,7 +227,7 @@ defmodule Membrane.FFmpeg.SWScaler do
   end
 
   defp maybe_convert(payload, native_converter, _source_format, _target_format) do
-    with {:ok, payload} <- Converter.Native.process(native_converter, payload) do
+    with {:ok, payload} <- PixelFormatConverter.Native.process(native_converter, payload) do
       payload
     else
       {:error, reason} ->
