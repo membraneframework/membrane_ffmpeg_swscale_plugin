@@ -40,7 +40,12 @@ defmodule Membrane.FFmpeg.SWScale.Converter.PixelFormatConvertingTest do
     handle_buffer_ctx = %{pads: %{input: %{stream_format: %{pixel_format: :RGB}}}}
 
     assert {[buffer: {:output, %Buffer{payload: output}}], _state} =
-             SWScale.Converter.handle_buffer(:input, %Buffer{payload: rgb_input}, handle_buffer_ctx, state)
+             SWScale.Converter.handle_buffer(
+               :input,
+               %Buffer{payload: rgb_input},
+               handle_buffer_ctx,
+               state
+             )
 
     assert bit_size(output) == pixels_count * 12
     assert output == i420_output

@@ -13,7 +13,7 @@ It is a part of [Membrane Multimedia Framework](https://membrane.stream).
 Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 ```elixir
-{:membrane_ffmpeg_swscale_plugin, "~> 0.15.1"}
+{:membrane_ffmpeg_swscale_plugin, "~> 0.16.0"}
 ```
 
 The precompiled builds of the [ffmpeg](https://www.ffmpeg.org) will be pulled and linked automatically. However, should there be any problems, consider installing it manually.
@@ -40,19 +40,21 @@ pacman -S ffmpeg
 
 ## Description
 
-### PixelFormatConverter
-PixelFormatConverter accepts raw video in any of the pixel formats specified in type [`Membrane.RawVideo.pixel_format_t()`](https://hexdocs.pm/membrane_raw_video_format/Membrane.RawVideo.html#t:pixel_format_t/0)
-as input and is capable of producing output in any of these pixel formats.
-
-When creating the element you need to specify a single option `format` defining the desired pixel format of the output.
+### Converter
+Converter accepts raw video in any of the pixel formats specified in type [`Membrane.RawVideo.pixel_format_t()`](https://hexdocs.pm/membrane_raw_video_format/Membrane.RawVideo.html#t:pixel_format_t/0).
 The element requires `Membrane.RawVideo` stream format on the input with `aligned: true` constraint, meaning that each buffer must contain exactly one raw video frame.
 
-### Scaler
-Scaler needs input in the YUV420p format, processes one frame at a time and requires getting stream format with input video
-width and height. To meet all requirements either `Membrane.RawVideo.Parser` or some decoder
-(e.g. `Membrane.H264.FFmpeg.Decoder`) have to precede Scaler in the pipeline.
+#### Converting pixel format
 
-There are two options that have to be specified when creating the element:
+When creating the element you can specify a single option `format` defining the desired pixel format of the output.
+`format` has to be [`Membrane.RawVideo.pixel_format_t()`](https://hexdocs.pm/membrane_raw_video_format/Membrane.RawVideo.html#t:pixel_format_t/0).
+
+#### Scaling
+
+Converter needs to receive stream format with input video width and height. To meet all requirements either `Membrane.RawVideo.Parser` or some decoder
+(e.g. `Membrane.H264.FFmpeg.Decoder`) have to precede Converter in the pipeline.
+
+There are two options related to scaling, that can be specified when creating the element:
 
 - `output_width` - desired scaled video width.
 - `output_height` - desired scaled video height.
@@ -68,40 +70,13 @@ dimensions of the input frame match the respective dimension of the desired outp
 sides of the scaled frame equally. They are either above and below the frame or on the left and right sides of it.
 It depends on the dimension that did not match after scaling.
 
-The output of the element is also in the YUV420p format. It has the size as specified in the options.
+The output of the element has the size as specified in the options.
 
 ## Usage
 
-### `Membrane.FFmpeg.SWScale.Scaler`
-
-Scaling an encoded (using H.264 standard) video requires parser and decoder because Scaler scales only raw,
-decoded video. The pipeline scales the video and reencodes it.
-
-```elixir
-defmodule Scaling.Pipeline do
-  use Membrane.Pipeline
-
-  @impl true
-  def handle_init(_ctx, _options) do
-    structure = [
-      child(:file_src, %Membrane.File.Source{location: "/tmp/input.h264"})
-      |> child(:parser, Membrane.H264.Parser)
-      |> child(:decoder, Membrane.H264.FFmpeg.Decoder)
-      |> child(:scaler, %Membrane.FFmpeg.SWScale.Scaler{output_width: 640, output_height: 640})
-      |> child(:encoder, Membrane.H264.FFmpeg.Encoder)
-      |> child(:file_sink, %Membrane.File.Sink{location: "/tmp/output.h264"})
-    ]
-
-    {[spec: structure}, %{}}
-  end
-end
-```
-
-### `Membrane.FFmpeg.SWScale.PixelFormatConverter`
-
 Converting the pixel format of an encoded (using H.264 standard) video requires a parser and a decoder
-because the Converter performs conversion only on the raw , decoded video. The pipeline changes the pixel
-format of the video to the `I422` format and reencodes it.
+because the `SWScale.Converter` performs conversion only on the raw, decoded video. The pipeline scales the video to the `640x640`
+shape, changes the pixel format of the video to the `I422` format and reencodes it.
 
 ```elixir
 defmodule Converting.Pipeline do
@@ -113,7 +88,11 @@ defmodule Converting.Pipeline do
       child(:file_src, %Membrane.File.Source{location: "/tmp/input.h264"})
       |> child(:parser, Membrane.H264.Parser)
       |> child(:decoder, Membrane.H264.FFmpeg.Decoder)
-      |> child(:converter, %Membrane.FFmpeg.SWScale.PixelFormatConverter{format: :I422})
+      |> child(:converter, %Membrane.FFmpeg.SWScale.Converter{
+        output_height: 640, 
+        output_width: 640, 
+        format: :I422
+      })
       |> child(:encoder, Membrane.H264.FFmpeg.Encoder)
       |> child(:file_sink, %Membrane.File.Sink{location: "/tmp/output.h264"})
     ]
