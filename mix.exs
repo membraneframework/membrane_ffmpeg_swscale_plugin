@@ -34,7 +34,7 @@ defmodule Membrane.FFmpeg.SWScale.Mixfile do
 
   defp deps do
     [
-      {:membrane_core, "~> 1.0"},
+      {:membrane_core, "~> 1.1"},
       {:membrane_raw_video_format, "~> 0.3.0"},
       {:membrane_common_c, "~> 0.16.0"},
       {:bundlex, "~> 1.2"},
