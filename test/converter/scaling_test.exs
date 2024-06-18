@@ -1,10 +1,10 @@
-defmodule ScalerTest do
+defmodule Membrane.FFmpeg.SWScale.Converter.ScalingTest do
   use ExUnit.Case
 
   import Membrane.ChildrenSpec
   import Membrane.Testing.Assertions
 
-  alias Membrane.FFmpeg.SWScale.Scaler
+  alias Membrane.FFmpeg.SWScale
   alias Membrane.{H264, RawVideo}
   alias Membrane.Testing.Pipeline
 
@@ -60,7 +60,7 @@ defmodule ScalerTest do
             )
             |> child(
               :scaler,
-              %Membrane.FFmpeg.SWScale.Scaler{output_width: 400, output_height: 800}
+              %SWScale.Converter{output_width: 400, output_height: 800}
             )
             |> child(:sink, %Membrane.File.Sink{location: output_path})
         )
@@ -77,7 +77,7 @@ defmodule ScalerTest do
             child(:file_src, %Membrane.File.Source{location: input_path})
             |> child(:parser, H264.Parser)
             |> child(:decoder, H264.FFmpeg.Decoder)
-            |> child(:scaler, %Membrane.FFmpeg.SWScale.Scaler{
+            |> child(:scaler, %SWScale.Converter{
               output_width: 400,
               output_height: 800
             })
@@ -91,7 +91,7 @@ defmodule ScalerTest do
   describe "output dimensions should" do
     test "be calculated if only width is provided" do
       assert {[], state} =
-               Scaler.handle_init(%{}, %Scaler{
+               SWScale.Converter.handle_init(%{}, %SWScale.Converter{
                  output_width: 640,
                  output_height: nil,
                  use_shm?: false
@@ -99,7 +99,7 @@ defmodule ScalerTest do
 
       assert {[stream_format: {:output, @output_stream_format}],
               %{output_width: 640, output_height: 360}} =
-               Scaler.handle_stream_format(
+               SWScale.Converter.handle_stream_format(
                  :input,
                  @input_stream_format,
                  %{},
@@ -109,7 +109,7 @@ defmodule ScalerTest do
 
     test "be calculated if only height is provided" do
       assert {[], state} =
-               Scaler.handle_init(%{}, %Scaler{
+               SWScale.Converter.handle_init(%{}, %SWScale.Converter{
                  output_width: nil,
                  output_height: 360,
                  use_shm?: false
@@ -117,22 +117,12 @@ defmodule ScalerTest do
 
       assert {[stream_format: {:output, @output_stream_format}],
               %{output_width: 640, output_height: 360}} =
-               Scaler.handle_stream_format(
+               SWScale.Converter.handle_stream_format(
                  :input,
                  @input_stream_format,
                  %{},
                  state
                )
-    end
-
-    test "raise if neither width nor height is provided" do
-      assert_raise RuntimeError, "At least one dimension needs to be provided", fn ->
-        Scaler.handle_init(%{}, %Scaler{
-          output_width: nil,
-          output_height: nil,
-          use_shm?: false
-        })
-      end
     end
   end
 end

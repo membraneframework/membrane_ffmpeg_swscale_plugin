@@ -1,25 +1,20 @@
 defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
   @moduledoc """
-  This element performs conversion between pixel formats of raw video.
+  This module is deprecated. Use Membrane.FFmpeg.SWScale.Converter instead.
 
-  Only the following pixel formats are supported, both as input and output:
-  - I420
-  - I422
-  - I444
-  - RGB
-  - BGRA
-  - RGBA
-  - NV12
-  - NV21
-  - AYUV
-  - YUY2
+  All options supported by #{inspect(__MODULE__)} are supported by Membrane.FFmpeg.SWScale.Converter.
   """
   use Membrane.Filter
+
+  require Membrane.Logger
 
   alias __MODULE__.Native
   alias Membrane.{Buffer, RawVideo}
 
   @supported_pixel_formats [:I420, :I422, :I444, :RGB, :BGRA, :RGBA, :NV12, :NV21, :AYUV, :YUY2]
+
+  @spec supported_pixel_formats() :: [RawVideo.pixel_format_t()]
+  def supported_pixel_formats(), do: @supported_pixel_formats
 
   def_input_pad :input,
     accepted_format:
@@ -33,6 +28,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
 
   def_options format: [
                 spec: RawVideo.pixel_format_t(),
+                required?: true,
                 description: """
                 Desired pixel format of output video.
                 """
@@ -40,6 +36,11 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
 
   @impl true
   def handle_init(_ctx, %__MODULE__{} = opts) do
+    Membrane.Logger.warning("""
+    Filter #{inspect(__MODULE__)} is deprecated. Use Membrane.FFmpeg.SWScale.Converter instead. \
+    All options supported by #{inspect(__MODULE__)} are supported by Membrane.FFmpeg.SWScale.Converter.
+    """)
+
     {[], %{native: nil, format: opts.format}}
   end
 
@@ -59,6 +60,12 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
       {:error, reason} ->
         raise "Scaler nif context initialization failed. Reason: `#{inspect(reason)}`"
     end
+  end
+
+  @impl true
+  def handle_buffer(:input, buffer, ctx, state)
+      when ctx.pads.input.stream_format.pixel_format == state.format do
+    {[buffer: {:output, buffer}], state}
   end
 
   @impl true
