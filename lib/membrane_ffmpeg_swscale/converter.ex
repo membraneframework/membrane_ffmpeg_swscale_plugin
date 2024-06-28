@@ -149,8 +149,8 @@ defmodule Membrane.FFmpeg.SWScale.Converter do
              ),
            {:ok, output_converter} <-
              PixelFormatConverter.Native.create(
-               stream_format.width,
-               stream_format.height,
+               state.output_width,
+               state.output_height,
                :I420,
                output_pixel_format
              ) do
