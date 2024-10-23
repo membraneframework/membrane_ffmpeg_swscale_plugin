@@ -70,7 +70,7 @@ defmodule Membrane.FFmpeg.SWScale.Converter do
                   "If true, native scaler will use shared memory (via `t:Shmex.t/0`) for storing frames"
               ],
               format: [
-                spec: RawVideo.pixel_format_t() | nil,
+                spec: RawVideo.pixel_format() | nil,
                 default: nil,
                 description: """
                 Desired pixel format of output video.
