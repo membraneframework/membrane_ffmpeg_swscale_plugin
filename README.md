@@ -13,7 +13,7 @@ It is a part of [Membrane Multimedia Framework](https://membrane.stream).
 Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 ```elixir
-{:membrane_ffmpeg_swscale_plugin, "~> 0.16.1"}
+{:membrane_ffmpeg_swscale_plugin, "~> 0.16.2"}
 ```
 
 The precompiled builds of the [ffmpeg](https://www.ffmpeg.org) will be pulled and linked automatically. However, should there be any problems, consider installing it manually.
@@ -41,13 +41,13 @@ pacman -S ffmpeg
 ## Description
 
 ### Converter
-Converter accepts raw video in any of the pixel formats specified in type [`Membrane.RawVideo.pixel_format_t()`](https://hexdocs.pm/membrane_raw_video_format/Membrane.RawVideo.html#t:pixel_format_t/0).
+Converter accepts raw video in any of the pixel formats specified in type [`Membrane.RawVideo.pixel_format()`](https://hexdocs.pm/membrane_raw_video_format/Membrane.RawVideo.html#t:pixel_format/0).
 The element requires `Membrane.RawVideo` stream format on the input with `aligned: true` constraint, meaning that each buffer must contain exactly one raw video frame.
 
 #### Converting pixel format
 
 When creating the element you can specify a single option `format` defining the desired pixel format of the output.
-`format` has to be [`Membrane.RawVideo.pixel_format_t()`](https://hexdocs.pm/membrane_raw_video_format/Membrane.RawVideo.html#t:pixel_format_t/0).
+`format` has to be [`Membrane.RawVideo.pixel_format()`](https://hexdocs.pm/membrane_raw_video_format/Membrane.RawVideo.html#t:pixel_format/0).
 
 #### Scaling
 

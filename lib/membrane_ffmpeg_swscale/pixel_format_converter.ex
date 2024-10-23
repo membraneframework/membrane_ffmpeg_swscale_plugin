@@ -13,7 +13,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
 
   @supported_pixel_formats [:I420, :I422, :I444, :RGB, :BGRA, :RGBA, :NV12, :NV21, :AYUV, :YUY2]
 
-  @spec supported_pixel_formats() :: [RawVideo.pixel_format_t()]
+  @spec supported_pixel_formats() :: [RawVideo.pixel_format()]
   def supported_pixel_formats(), do: @supported_pixel_formats
 
   def_input_pad :input,
@@ -27,7 +27,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
       when pixel_format in @supported_pixel_formats
 
   def_options format: [
-                spec: RawVideo.pixel_format_t(),
+                spec: RawVideo.pixel_format(),
                 required?: true,
                 description: """
                 Desired pixel format of output video.
