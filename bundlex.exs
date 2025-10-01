@@ -14,8 +14,10 @@ defmodule Membrane.FFmpeg.SWScale.BundlexProject do
         sources: ["scaler/scaler.c"],
         os_deps: [
           ffmpeg: [
-            {:precompiled, Membrane.PrecompiledDependencyProvider.get_dependency_url(:ffmpeg),
-             ["libswscale", "libavutil"]},
+            {:precompiled,
+             Membrane.PrecompiledDependencyProvider.get_dependency_url(:ffmpeg,
+               version: "6.0.1"
+             ), ["libswscale", "libavutil"]},
             {:pkg_config, ["libswscale", "libavutil"]}
           ]
         ],
@@ -26,8 +28,10 @@ defmodule Membrane.FFmpeg.SWScale.BundlexProject do
         sources: ["pixel_format_converter/converter.c"],
         os_deps: [
           ffmpeg: [
-            {:precompiled, Membrane.PrecompiledDependencyProvider.get_dependency_url(:ffmpeg),
-             ["libswscale", "libavutil"]},
+            {:precompiled,
+             Membrane.PrecompiledDependencyProvider.get_dependency_url(:ffmpeg,
+               version: "6.0.1"
+             ), ["libswscale", "libavutil"]},
             {:pkg_config, ["libswscale", "libavutil"]}
           ]
         ],

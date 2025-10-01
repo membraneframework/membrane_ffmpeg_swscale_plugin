@@ -13,7 +13,7 @@ It is a part of [Membrane Multimedia Framework](https://membrane.stream).
 Add the following line to your `deps` in `mix.exs`. Run `mix deps.get`.
 
 ```elixir
-{:membrane_ffmpeg_swscale_plugin, "~> 0.16.2"}
+{:membrane_ffmpeg_swscale_plugin, "~> 0.16.3"}
 ```
 
 The precompiled builds of the [ffmpeg](https://www.ffmpeg.org) will be pulled and linked automatically. However, should there be any problems, consider installing it manually.
@@ -89,14 +89,14 @@ defmodule Converting.Pipeline do
       |> child(:parser, Membrane.H264.Parser)
       |> child(:decoder, Membrane.H264.FFmpeg.Decoder)
       |> child(:converter, %Membrane.FFmpeg.SWScale.Converter{
-        output_height: 640, 
-        output_width: 640, 
+        output_height: 640,
+        output_width: 640,
         format: :I422
       })
       |> child(:encoder, Membrane.H264.FFmpeg.Encoder)
       |> child(:file_sink, %Membrane.File.Sink{location: "/tmp/output.h264"})
     ]
-    
+
     {[spec: structure], %{}}
   end
 end
