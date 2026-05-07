@@ -45,16 +45,15 @@ defmodule Membrane.FFmpeg.SWScale.Mixfile do
       {:membrane_h26x_plugin, "~> 0.10.2", only: :test},
       {:membrane_h264_ffmpeg_plugin, "~> 0.32.4", only: :test},
       {:membrane_raw_video_parser_plugin, "~> 0.12.2", only: :test},
-      {:ex_doc, "~> 0.34", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.4", only: :dev, runtime: false},
-      {:credo, "~> 1.7", only: :dev, runtime: false}
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+      {:dialyxir, ">= 0.0.0", only: :dev, runtime: false},
+      {:credo, ">= 0.0.0", only: :dev, runtime: false}
     ]
   end
 
   defp dialyzer() do
     opts = [
-      flags: [:error_handling],
-      plt_add_apps: [:syntax_tools]
+      flags: [:error_handling]
     ]
 
     if System.get_env("CI") == "true" do
