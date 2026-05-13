@@ -69,7 +69,7 @@ defmodule Membrane.FFmpeg.SWScale.PixelFormatConverter do
   end
 
   @impl true
-  def handle_buffer(:input, buffer, _ctx, state) do
+  def handle_buffer(:input, %Buffer{} = buffer, _ctx, state) do
     with {:ok, payload} <- Native.process(state.native, buffer.payload) do
       buffer = %Buffer{buffer | payload: payload}
       {[buffer: {:output, buffer}], state}

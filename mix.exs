@@ -1,7 +1,7 @@
 defmodule Membrane.FFmpeg.SWScale.Mixfile do
   use Mix.Project
 
-  @version "0.16.3"
+  @version "0.16.4"
   @github_url "https://github.com/membraneframework/membrane_ffmpeg_swscale_plugin"
 
   def project do
@@ -13,6 +13,7 @@ defmodule Membrane.FFmpeg.SWScale.Mixfile do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      dialyzer: dialyzer(),
       description:
         "Plugin performing video scaling, using SWScale module of [FFmpeg](https://www.ffmpeg.org/) library.",
       package: package(),
@@ -44,10 +45,24 @@ defmodule Membrane.FFmpeg.SWScale.Mixfile do
       {:membrane_h26x_plugin, "~> 0.10.2", only: :test},
       {:membrane_h264_ffmpeg_plugin, "~> 0.32.4", only: :test},
       {:membrane_raw_video_parser_plugin, "~> 0.12.2", only: :test},
-      {:ex_doc, "~> 0.28", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.1", only: :dev, runtime: false},
-      {:credo, "~> 1.6", only: :dev, runtime: false}
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+      {:dialyxir, ">= 0.0.0", only: :dev, runtime: false},
+      {:credo, ">= 0.0.0", only: :dev, runtime: false}
     ]
+  end
+
+  defp dialyzer() do
+    opts = [
+      flags: [:error_handling]
+    ]
+
+    if System.get_env("CI") == "true" do
+      # Store PLTs in cacheable directory for CI
+      File.mkdir_p!(Path.join([__DIR__, "priv", "plts"]))
+      [plt_local_path: "priv/plts", plt_core_path: "priv/plts"] ++ opts
+    else
+      opts
+    end
   end
 
   defp package do
