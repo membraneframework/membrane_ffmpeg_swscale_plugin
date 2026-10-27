@@ -60,11 +60,20 @@ end:
 UNIFEX_TERM process(UnifexEnv *env, State *state, UnifexPayload *payload) {
   UNIFEX_TERM ret;
 
+  // The payload is read as a full frame of the negotiated format, so a shorter
+  // one would be read out of bounds.
+  int src_image_size = av_image_get_buffer_size(state->src_format, state->width,
+                                                state->height, NO_ALIGNMENT);
+  if (src_image_size < 0 || payload->size < (unsigned int)src_image_size) {
+    return process_result_error(env, "invalid_frame_size");
+  }
+
   if (av_image_fill_arrays(state->src_data, state->src_linesize, payload->data,
                            state->src_format, state->width, state->height,
                            1) < 0) {
     ret = process_result_error(env, "scaling_failed");
-  };
+    goto end;
+  }
 
   // perform the conversion
   if (sws_scale(state->sws_context, (const uint8_t *const *)state->src_data,
