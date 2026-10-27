@@ -28,6 +28,7 @@ UNIFEX_TERM create(UnifexEnv *env, uint64_t width, uint64_t height,
   }
 
   State *state = unifex_alloc_state(env);
+  state->dst_data[0] = NULL;
   state->sws_context =
       sws_getContext(width, height, input_fmt, width, height, output_fmt,
                      SWS_BICUBIC, NULL, NULL, NULL);
@@ -45,8 +46,6 @@ UNIFEX_TERM create(UnifexEnv *env, uint64_t width, uint64_t height,
   // Allocate memory for the output frame
   if (av_image_alloc(state->dst_data, state->dst_linesize, state->width,
                      state->height, state->dst_format, ALIGNMENT) < 0) {
-
-    sws_freeContext(state->sws_context);
     res = create_result_error(env, "memory_allocation_failed");
     goto end;
   }
@@ -100,6 +99,7 @@ void handle_destroy_state(UnifexEnv *env, State *state) {
   if (state->sws_context) {
     sws_freeContext(state->sws_context);
   }
+  av_freep(&state->dst_data[0]);
 }
 
 enum AVPixelFormat string_to_AVPixelFormat(char *format) {
