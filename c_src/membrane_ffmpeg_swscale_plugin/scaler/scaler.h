@@ -3,6 +3,7 @@
 #include <libavutil/imgutils.h>
 #include <libavutil/parseutils.h>
 #include <libswscale/swscale.h>
+#include <stdint.h>
 #include <stdio.h>
 
 typedef struct ScalerState {

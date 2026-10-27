@@ -53,4 +53,12 @@ defmodule Scaler.NativeTest do
       |> scaling_test()
     end
   end)
+
+  test "Reject invalid dimensions" do
+    assert {:error, :invalid_dimensions} = Scaler.create(640, 0, 320, 240)
+    assert {:error, :invalid_dimensions} = Scaler.create(0, 480, 320, 240)
+    assert {:error, :invalid_dimensions} = Scaler.create(640, 480, 320, 0)
+    assert {:error, :odd_output_dimensions} = Scaler.create(640, 480, 1280, 721)
+    assert {:error, :odd_output_dimensions} = Scaler.create(640, 480, 1279, 720)
+  end
 end

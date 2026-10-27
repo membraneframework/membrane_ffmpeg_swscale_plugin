@@ -18,10 +18,10 @@ void handle_destroy_state(UnifexEnv *env, State *state) {
 void calculate_scaling_resolution(int input_width, int input_height,
                                   int output_width, int output_height,
                                   int *scaled_width, int *scaled_height) {
-  if ((float)(output_height * input_width / input_height) <= output_width) {
+  if ((int64_t)output_height * input_width / input_height <= output_width) {
     // paddings on left and right
 
-    *scaled_width = output_height * input_width / input_height;
+    *scaled_width = (int64_t)output_height * input_width / input_height;
     *scaled_height = output_height;
 
     // both paddings need even width
@@ -35,7 +35,7 @@ void calculate_scaling_resolution(int input_width, int input_height,
     // paddings above and below
 
     *scaled_width = output_width;
-    *scaled_height = output_width * input_height / input_width;
+    *scaled_height = (int64_t)output_width * input_height / input_width;
 
     // only even size
     *scaled_width = *scaled_width / 2 * 2;
@@ -50,6 +50,16 @@ void calculate_scaling_resolution(int input_width, int input_height,
 UNIFEX_TERM create(UnifexEnv *env, int input_width, int input_height,
                    int output_width, int output_height) {
   UNIFEX_TERM result;
+
+  if (input_width <= 0 || input_height <= 0 || output_width <= 0 ||
+      output_height <= 0) {
+    return create_result_error(env, "invalid_dimensions");
+  }
+  // add_paddings assumes even output dimensions
+  if (output_width % 2 != 0 || output_height % 2 != 0) {
+    return create_result_error(env, "odd_output_dimensions");
+  }
+
   State *state = unifex_alloc_state(env);
   state->sws_context = NULL;
 
