@@ -52,6 +52,8 @@ UNIFEX_TERM create(UnifexEnv *env, int input_width, int input_height,
   UNIFEX_TERM result;
   State *state = unifex_alloc_state(env);
   state->sws_context = NULL;
+  state->scaled_data[0] = NULL;
+  state->output_data[0] = NULL;
 
   enum AVPixelFormat pixel_format = AV_PIX_FMT_YUV420P;
   int scaling_algorithm = SWS_BILINEAR;

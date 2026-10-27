@@ -53,4 +53,9 @@ defmodule Scaler.NativeTest do
       |> scaling_test()
     end
   end)
+
+  test "Failed create does not crash on cleanup" do
+    assert {:error, _reason} = Scaler.create(640, 480, 0, 0)
+    :erlang.garbage_collect()
+  end
 end
