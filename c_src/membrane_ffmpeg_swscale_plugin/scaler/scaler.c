@@ -183,6 +183,14 @@ UNIFEX_TERM scale(UnifexEnv *env, UnifexPayload *payload, int use_shm,
   uint8_t *input_data[4];
   int input_linesize[4];
 
+  // The payload is read as a full input frame, so a shorter one would be read
+  // out of bounds.
+  int input_size = av_image_get_buffer_size(pixel_format, state->input_width,
+                                            state->input_height, 1);
+  if (input_size < 0 || payload->size < (unsigned int)input_size) {
+    return scale_result_error(env, "invalid_frame_size");
+  }
+
   if (av_image_fill_arrays(input_data, input_linesize, payload->data,
                            pixel_format, state->input_width,
                            state->input_height, 1) < 0) {

@@ -53,4 +53,14 @@ defmodule Scaler.NativeTest do
       |> scaling_test()
     end
   end)
+
+  test "Reject frames shorter than the input resolution" do
+    assert {:ok, state} = Scaler.create(320, 240, 640, 480)
+
+    for frame <- [<<>>, :binary.copy(<<0>>, 115_199)] do
+      assert {:error, :invalid_frame_size} = Scaler.scale(frame, false, state)
+    end
+
+    assert {:ok, _frame} = Scaler.scale(:binary.copy(<<0>>, 115_200), false, state)
+  end
 end
